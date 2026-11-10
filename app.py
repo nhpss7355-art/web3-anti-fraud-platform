@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 初始化 Session State（亂數產生專屬訪客編號，不再每個人都一樣！）
+# 初始化 Session State
 if 'user_id' not in st.session_state:
     st.session_state.user_id = f"Student-{random.randint(10000, 99999)}"
 if 'user_points' not in st.session_state:
@@ -17,6 +17,11 @@ if 'cookie_drawn' not in st.session_state:
     st.session_state.cookie_drawn = False
 if 'cookie_result' not in st.session_state:
     st.session_state.cookie_result = None
+
+# 紀錄每個單元是否已經通關過（防止重複刷積分）
+if 'completed_units' not in st.session_state:
+    st.session_state.completed_units = []
+
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
         {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "votes": 42},
@@ -36,14 +41,22 @@ with col_s1:
 with col_s2:
     st.warning(f"⭐ **平台學習積分 (Task Coins)**\n\n{st.session_state.user_points} 點")
 with col_s3:
-    st.success("🛡️ **資安素養防禦等級**\n\nWeb3 資安防護生 (Lv.2)")
+    # 根據總積分自動判定資安素養吸收等級
+    pts = st.session_state.user_points
+    if pts >= 350:
+        level_str = "🏆 Web3 資安防禦專家 (Lv.4)"
+    elif pts >= 250:
+        level_str = "🥈 Web3 資安進階防護生 (Lv.3)"
+    else:
+        level_str = "🥉 Web3 資安新手 (Lv.2)"
+    st.success(f"🛡️ **資安素養吸收評級**\n\n{level_str}")
 
 st.markdown("---")
 
 # 側邊欄分頁導覽
 menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
     "🏠 專題核心總覽 (題目與架構)",
-    "🎬 沉浸式短影音學習 (微學習專區)",
+    "🎬 沉浸式短影音學習 (防刷分測驗區)",
     "🛡️ 防詐動態牆 (社群通報與同儕驗證)",
     "🥠 Lucky Cookie Bite (Web3 幸運餅乾)",
     "👥 團隊成員與 WBS 分工"
@@ -59,40 +72,84 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         st.markdown("### 🎬 核心模組一：影音內容驅動")
-        st.info("將複雜的區塊鏈資安（助記詞保護、冷熱錢包、無限授權 Permit2）拆解為 30-60 秒沉浸式短影音。")
+        st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
     with col_c2:
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，使用者可即時通報可疑釣魚網站，透過社群同儕驗證機制抵抗詐騙。")
+        st.warning("建構去中心化防詐警報網，使用者可即時通報可疑釣魚網站，透過同儕驗證機制抵抗詐騙。")
 
-# 2. 短影音學習
-elif menu == "🎬 沉浸式短影音學習 (微學習專區)":
-    st.header("🎬 直立式短影音微學習專區")
-    st.write("觀看專題企劃之硬核資安短影音，完成隨堂挑戰即可賺取學習積分！")
+# 2. 短影音學習 (擴充單元 + 互動答題 + 防刷分機制)
+elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
+    st.header("🎬 直立式短影音微學習與隨堂測驗專區")
+    st.write("觀看資安短影音後，必須完成下方**隨堂防詐測驗**！答對即可獲得積分，每個單元限通關一次，杜絕重複刷分。")
     
     col_v1, col_v2 = st.columns(2)
     with col_v1:
-        st.markdown("### 📱 手機模擬播放器")
-        video_choice = st.selectbox("選擇學習單元：", [
+        st.markdown("### 📱 手機模擬播放器與測驗")
+        
+        unit_choice = st.selectbox("選擇學習單元：", [
             "單元 1：助記詞絕對不上雲端！",
             "單元 2：識別 Discord 假官方空投",
-            "單元 3：小心 Permit2 無限授權合約"
+            "單元 3：小心 Permit2 無限授權合約",
+            "單元 4：防範假冒 DEX 交易所釣魚",
+            "單元 5：私鑰保管與硬體錢包安全"
         ])
-        if "單元 1" in video_choice:
+        
+        # 顯示對應影片觀念
+        if "單元 1" in unit_choice:
+            u_key = "unit_1"
             st.info("▶️ **播放中：助記詞絕對不上雲端**\n\n*核心觀念：私鑰與助記詞為資產完全控制權，絕對不可截圖存於手機相簿！*")
-        elif "單元 2" in video_choice:
+            q_title = "隨堂考：如果朋友私訊跟你要助記詞幫忙解鎖錢包，你應該怎麼做？"
+            options = ["直接把助記詞截圖傳給他", "絕對不交出，助記詞等於資產所有權", "先轉 0.1 ETH 給他驗證"]
+            correct_ans = "絕對不交出，助記詞等於資產所有權"
+        elif "單元 2" in unit_choice:
+            u_key = "unit_2"
             st.warning("▶️ **播放中：識別 Discord 假官方空投**\n\n*核心觀念：陌生私訊送免費空投 99% 具備釣魚惡意合約！*")
-        else:
+            q_title = "隨堂考：在 Discord 收到陌生管理員私訊說你中了免費 NFT 空投，點擊連結即可領取，你應該？"
+            options = ["立刻點擊連結登入錢包領取", "不理會並檢舉，因為極高機率是釣魚合約", "把自己的 Discord 密碼告訴他"]
+            correct_ans = "不理會並檢舉，因為極高機率是釣魚合約"
+        elif "單元 3" in unit_choice:
+            u_key = "unit_3"
             st.success("▶️ **播放中：小心 Permit2 無限授權合約**\n\n*核心觀念：互動前使用 Etherscan 檢查授權額度。*")
+            q_title = "隨堂考：與不知名去中心化合約互動時，彈出「無限授權 (Unlimited Approval)」請求，正確做法是？"
+            options = ["直接盲簽確認", "使用工具自訂修改為剛好需要的授權額度或拒絕", "把電腦重開機"]
+            correct_ans = "使用工具自訂修改為剛好需要的授權額度或拒絕"
+        elif "單元 4" in unit_choice:
+            u_key = "unit_4"
+            st.info("▶️ **播放中：防範假冒 DEX 交易所釣魚**\n\n*核心觀念：釣魚網站會模仿知名 Uniswap 或 PancakeSwap 介面。*")
+            q_title = "隨堂考：進入去中心化交易所時，發現網址拼寫有一兩個字母怪怪的（例如 uniswvop.com），這代表？"
+            options = ["官方網站改版換網址了", "這是高仿釣魚網站，連接錢包就會被偷錢", "網速太慢導致的顯示錯誤"]
+            correct_ans = "這是高仿釣魚網站，連接錢包就會被偷錢"
+        else:
+            u_key = "unit_5"
+            st.success("▶️ **播放中：私鑰保管與硬體錢包安全**\n\n*核心觀念：大額數位資產應存放於離線冷錢包。*")
+            q_title = "隨堂考：以下哪種方式存放私鑰或助記詞最安全？"
+            options = ["用筆抄在實體紙張上並妥善鎖在保險箱", "用手機拍照存在雲端相簿", "發到自己的 LINE 記事本"]
+            correct_ans = "用筆抄在實體紙張上並妥善鎖在保險箱"
+
+        # 檢查該單元是否已經通關過
+        if u_key in st.session_state.completed_units:
+            st.success("✅ **本單元測驗已通關！**（每個單元限得獎勵一次，無法重複刷分）")
+        else:
+            st.markdown(f"**{q_title}**")
+            user_choice = st.radio("請選擇您的答案：", options, key=f"radio_{u_key}")
             
-        if st.button("✅ 完成本單元測驗 (領取 +50 積分)"):
-            st.session_state.user_points += 50
-            st.balloons()
-            st.success("🎉 測驗成功！積分 +50 點已入帳！")
-            st.rerun()
+            if st.button("🚀 提交答案領取積分", key=f"btn_{u_key}"):
+                if user_choice == correct_ans:
+                    st.session_state.user_points += 50
+                    st.session_state.completed_units.append(u_key)
+                    st.balloons()
+                    st.success("🎉 **回答正確！** 恭喜獲得 +50 學習積分已入帳！")
+                    st.rerun()
+                else:
+                    st.error("❌ **回答錯誤！** 請重新觀看上方短影音核心觀念，並再次思考後作答。")
 
     with col_v2:
-        st.markdown("### 💡 影音素養推廣成效")
-        st.write("經實驗證實，透過短影音與互動測驗相結合，學生的資安風險辨識能力顯著提升，有效防範社交工程攻擊。")
+        st.markdown("### 📊 學習吸收成效與總結算機制")
+        st.write("""
+        * **防刷分機制**：系統透過學員通關紀錄追蹤，確保每位使用者各單元僅能獲得一次獎勵，杜絕惡意洗分。
+        * **答對與答錯回饋**：透過即時正負向回饋，強化學生對社交工程與釣魚攻擊的直覺反應。
+        * **素養吸收判定**：系統會根據您累積的總積分（Task Coins），自動將您的資安防禦等級劃分為新手、進階或專家，適合作為期末專題成效評估依據！
+        """)
 
 # 3. 防詐動態牆
 elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
@@ -126,7 +183,7 @@ elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
                 st.success("👍 驗證投票成功！積分 +10 點！")
                 st.rerun()
 
-# 4. 幸運餅乾 (限制每日只能抽一次，並擴充豐富的中獎序列)
+# 4. 幸運餅乾
 elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾)":
     st.header("🥠 Lucky Cookie Bite - Web3 資安幸運餅乾與防禦運勢")
     st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客每日僅能抽取一次幸運餅乾，解鎖專屬防詐錦囊與積分！")
@@ -156,7 +213,7 @@ elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾)":
     
     with col_g2:
         st.markdown("### 🏆 幸運餅乾設計邏輯與亮點")
-        st.info("• **防洗分機制**：透過 Session 紀錄抽獎狀態，防止重複點擊洗積分。\n• **多元中獎序列**：內含 5 種不同等級的籤文（極品大吉、大吉、中吉、小吉、小凶提醒），增加互動驚喜感！")
+        st.info("• **防洗分機制**：透過 Session 紀錄抽獎狀態，防止重複點擊洗積分。\n• **多元中獎序列**：內含 5 種不同等級的籤文，增加互動驚喜感！")
 
 # 5. 團隊分工
 elif menu == "👥 團隊成員與 WBS 分工":
