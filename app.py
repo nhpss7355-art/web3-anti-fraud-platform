@@ -45,17 +45,8 @@ menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
 # 1. 核心總覽
 if menu == "🏠 專題核心總覽":
     st.header("🏠 專題系統架構與核心價值")
-    st.write("""
-    本專題針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育平台 (Tasksnap)。
-    """)
-    
-    st.success("""
-    🌐 **關於「如何取得真實線上網址（Public URL）」給老師與同學看？**
-    你們可以將這支 Python 程式（`app.py`）免費部署到 **Streamlit Community Cloud** 或 **Render** 雲端平台：
-    1. 將程式碼上傳到 GitHub 倉庫。
-    2. 前往 [Streamlit Cloud](https://streamlit.io/cloud)免費連動，點擊 Deploy。
-    3. 幾秒鐘後就會獲得一組真實的公開網址（例如 `https://tasksnap-platform.streamlit.app`），任何人、任何手機隨時隨地都能點擊連線！
-    """)
+    st.write("本專題針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育平台 (Tasksnap)。")
+    st.success("🌐 您的 Streamlit 線上網址已經成功上線並完成串接！隨時可以展示短影音模擬、防詐動態牆與即時積分系統。")
 
 # 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (賺積分)":
@@ -71,17 +62,11 @@ elif menu == "🎬 沉浸式短影音學習 (賺積分)":
             "單元 3：小心 Permit2 無限授權合約"
         ])
         if "單元 1" in video_choice:
-            st.info("▶️ 播放中：助記詞絕對不上雲端
-
-*核心觀念：私鑰與助記詞為資產完全控制權，絕對不可截圖存於手機相簿！*")
+            st.info("▶️ 播放中：助記詞絕對不上雲端\n\n*核心觀念：私鑰與助記詞為資產完全控制權，絕對不可截圖存於手機相簿！*")
         elif "單元 2" in video_choice:
-            st.warning("▶️ 播放中：識別 Discord 假官方空投
-
-*核心觀念：陌生私訊送免費空投 99% 具備釣魚惡意合約！*")
+            st.warning("▶️ 播放中：識別 Discord 假官方空投\n\n*核心觀念：陌生私訊送免費空投 99% 具備釣魚惡意合約！*")
         else:
-            st.success("▶️ 播放中：小心 Permit2 無限授權合約
-
-*核心觀念：互動前使用 Etherscan 檢查授權額度。*")
+            st.success("▶️ 播放中：小心 Permit2 無限授權合約\n\n*核心觀念：互動前使用 Etherscan 檢查授權額度。*")
             
         if st.button("✅ 完成本單元測驗 (領取 +50 積分)"):
             st.session_state.user_points += 50
@@ -116,9 +101,7 @@ elif menu == "🛡️ 防詐動態牆 (即時通報與投票)":
     for idx, post in enumerate(st.session_state.wall_posts):
         col_p1, col_p2 = st.columns([3, 1])
         with col_p1:
-            st.error(f"🚨 **{post['url']}**
-
-描述：{post['desc']}")
+            st.error(f"🚨 **{post['url']}**\n\n描述：{post['desc']}")
         with col_p2:
             if st.button(f"👍 確實是詐騙 ({post['votes']})", key=f"vote_{idx}"):
                 st.session_state.wall_posts[idx]['votes'] += 1
@@ -141,9 +124,7 @@ elif menu == "🥠 資安幸運餅乾 (抽獎系統)":
     if st.button("抽取今日資安籤文 🥠 (賺取 +30 積分)"):
         res = random.choice(fortunes)
         st.session_state.user_points += 30
-        st.success(f"🎉 抽獎成功！獲得積分 +30 點！
-
-### {res}")
+        st.success(f"🎉 抽獎成功！獲得積分 +30 點！\n\n### {res}")
         st.balloons()
 
 # 5. 團隊分工
