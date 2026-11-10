@@ -24,12 +24,23 @@ if 'cookie_history' not in st.session_state:
 if 'completed_units' not in st.session_state:
     st.session_state.completed_units = []
 
-# 防詐動態牆資料庫（資料永久保存在 Session 中，重新整理也不會不見）
+# 動態牆資料（支援網址、留言與截圖展示）
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
-        {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "risk": "🔴 高風險釣魚 (AI自動審核)", "reporter": "Student-88219"},
-        {"url": "Discord 假官方支援小幫手 (Support#8821)", "desc": "私訊聲稱錢包驗證失敗，要求提供助記詞協助解鎖。", "risk": "🔴 高風險社交工程 (AI自動審核)", "reporter": "Student-10492"},
-        {"url": "bybit-airdrop-bonus.net", "desc": "偽造知名交易所發放註冊獎金與釣魚授權。", "risk": "🟡 中度疑慮 (需注意)", "reporter": "Student-55120"}
+        {
+            "url": "https://www.lbank.com/bonus/center?icode=66I9H", 
+            "comment": "這是 LBank 官方合法行銷活動連結，經系統審核為安全。", 
+            "risk": "🟢 合法官方活動/推廣網址", 
+            "reporter": "Student-32808",
+            "image": None
+        },
+        {
+            "url": "fake-uniswap-rewards.com", 
+            "comment": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權，大家小心！", 
+            "risk": "🔴 高風險釣魚 (AI自動審核)", 
+            "reporter": "Student-88219",
+            "image": None
+        }
     ]
 
 # 頂部導覽列與即時積分狀態
@@ -62,7 +73,6 @@ with col_s3:
 # 可點開查看詳細排名與等級對照的小頁面
 with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕排名對照表"):
     st.markdown(f"""
-    ### 🎯 您的當前帳號表現總結
     * **訪客專屬代號**：`{st.session_state.user_id}`
     * **累積學習積分**：`{st.session_state.user_points} 點 Task Coins`
     * **當前資安素養階級**：`{level_str}`
@@ -75,7 +85,7 @@ st.markdown("---")
 menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
     "🏠 專題核心總覽 (題目與架構)",
     "🎬 沉浸式短影音學習 (防刷分測驗區)",
-    "🛡️ 防詐動態牆 (過濾機制與通報系統)",
+    "🛡️ 防詐動態牆 (網址審核與截圖留言牆)",
     "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)",
     "👥 團隊成員與 WBS 分工"
 ])
@@ -93,7 +103,7 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
         st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
     with col_c2:
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，內建嚴格的格式過濾與 AI 自動審核機制，杜絕惡意洗分。")
+        st.warning("建構去中心化防詐警報網，支援即時網址審核、心得留言與詐騙現場截圖上傳。")
 
 # 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
@@ -127,7 +137,7 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
         elif "單元 3" in unit_choice:
             u_key = "unit_3"
             st.success("▶️ **播放中：小心 Permit2 無限授權合約**\n\n*核心觀念：互動前使用 Etherscan 檢查授權額度。*")
-            q_title = "隨堂考：與不知名去中心化合約互動時，彈出「無限授權 (Unlimited Approval)」請求，正確做法是？"
+            q_title = "隨堂考：與不知名去中心化合約互動時，彈出無限授權請求，正確做法是？"
             options = ["直接盲簽確認", "使用工具自訂修改為剛好需要的授權額度或拒絕", "把電腦重開機"]
             correct_ans = "使用工具自訂修改為剛好需要的授權額度或拒絕"
         elif "單元 4" in unit_choice:
@@ -144,7 +154,7 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
             correct_ans = "用筆抄在實體紙張上並妥善鎖在保險箱"
 
         if u_key in st.session_state.completed_units:
-            st.success("✅ **本單元測驗已通關！**（每個單元限得獎勵一次，無法重複刷分）")
+            st.success("✅ **本單元測驗已通關！**")
         else:
             st.markdown(f"**{q_title}**")
             user_choice = st.radio("請選擇您的答案：", options, key=f"radio_{u_key}")
@@ -154,74 +164,89 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
                     st.session_state.user_points += 50
                     st.session_state.completed_units.append(u_key)
                     st.balloons()
-                    st.success("🎉 **回答正確！** 恭喜獲得 +50 學習積分已入帳！")
+                    st.success("🎉 **回答正確！** 恭喜獲得 +50 學習積分！")
                     st.rerun()
                 else:
-                    st.error("❌ **回答錯誤！** 請重新觀看上方短影音核心觀念，並再次思考後作答。")
+                    st.error("❌ **回答錯誤！** 請重新思考後作答。")
 
     with col_v2:
-        st.markdown("### 📊 學習吸收成效與總結算機制")
-        st.write("""
-        * **防刷分機制**：系統透過學員通關紀錄追蹤，確保每位使用者各單元僅能獲得一次獎勵。
-        * **素養吸收判定**：根據總積分自動將您的資安防禦等級與同儕排名即時更新！
-        """)
+        st.markdown("### 📊 學習吸收成效")
+        st.write("透過防刷分測驗與積分累積，即時評估您的 Web3 資安防禦等級。")
 
-# 3. 防詐動態牆 (加入嚴格過濾、防刷分與資料保留機制)
-elif menu == "🛡️ 防詐動態牆 (過濾機制與通報系統)":
-    st.header("🛡️ 社群防詐警報通報與 AI 智慧審核中心")
-    st.write("系統內建嚴格的**格式驗證與防洗分過濾機制**。提交的通報資料將被安全保留於雲端紀錄中，防止惡意亂填與重複刷分！")
+# 3. 防詐動態牆 (直接審核網址 + 留言 + 截圖上傳 + 完整展開列表)
+elif menu == "🛡️ 防詐動態牆 (網址審核與截圖留言牆)":
+    st.header("🛡️ 社群防詐網址審核與實況截圖留言牆")
+    st.write("直接輸入可疑網址進行系統自動審核，並可留下心得留言與上傳詐騙現場截圖佐證！下方通報清單將完整直接展開。")
     
-    with st.form("report_form"):
-        st.subheader("🚨 發起新的社群防詐通報")
-        input_url = st.text_input("可疑網址 / 詐騙帳號名稱：", placeholder="例如：fake-opensea-airdrop.com")
-        input_desc = st.text_area("詐騙手法描述（請詳細描述受害經過）：", placeholder="例如：聲稱抽中免費 NFT，連接錢包後立刻被轉走...")
-        submitted = st.form_submit_button("🤖 提交審核並發布警報 (賺取 +100 積分)")
+    with st.form("report_form", clear_on_submit=True):
+        st.subheader("🚨 提交新網址審核與留言通報")
+        input_url = st.text_input("輸入要審核的網址 (URL)：", placeholder="例如：https://fake-uniswap-airdrop.com")
+        input_comment = st.text_area("防詐心得留言 / 現場狀況說明：", placeholder="例如：點進去要求連接 Metamask 錢包，簽署後 USDT 瞬間被轉走！")
+        uploaded_file = st.file_uploader("上傳詐騙現場截圖 (選填，支援 PNG/JPG)：", type=["png", "jpg", "jpeg"])
+        
+        submitted = st.form_submit_button("🤖 執行網址審核並發布貼文 (賺取 +100 積分)")
         
         if submitted:
-            # 🛑 嚴格過濾機制：檢查是否為亂填或過短
             clean_url = input_url.strip()
-            clean_desc = input_desc.strip()
+            clean_comment = input_comment.strip()
             
-            if len(clean_url) < 4 or len(clean_desc) < 5:
-                st.error("⚠️ **格式不符 / 內容過短！** 請輸入有效的完整網址（至少 4 個字元）與詳細的詐騙手法描述，才可獲得積分與發布。")
+            if len(clean_url) < 4:
+                st.error("⚠️ 請輸入有效的完整網址（至少 4 個字元）！")
             else:
-                # 🛑 檢查是否重複通報
-                existing_urls = [p['url'].lower() for p in st.session_state.wall_posts]
-                if clean_url.lower() in existing_urls:
-                    st.warning(f"⚠️ **通報失敗！** 網址「{clean_url}」已經存在於防詐警報清單中，請勿重複提交洗分。")
+                url_lower = clean_url.lower()
+                
+                # 白名單與釣魚特徵判斷
+                trusted_official_domains = ["lbank.com", "binance.com", "okx.com", "bybit.com", "coinbase.com"]
+                is_trusted = any(domain in url_lower for domain in trusted_official_domains)
+                
+                if is_trusted:
+                    auto_risk = "🟢 合法官方活動/推廣網址"
                 else:
-                    # 🧠 AI 自動審核與風險分級邏輯
-                    url_lower = clean_url.lower()
-                    risk_keywords = ["airdrop", "free", "claim", "connect", "verify", "reward", "gift", "support", "bonus", "wallet", "unisw", "opensea", "metamask"]
+                    risk_keywords = ["airdrop-claim", "free-crypto", "connect-wallet", "verify-account", "wallet-fix", "reward-bonus"]
                     match_count = sum(1 for kw in risk_keywords if kw in url_lower)
-                    
-                    if match_count >= 1 or "-" in url_lower or len(url_lower) > 15:
+                    if match_count >= 1 or "-" in url_lower and "lbank" not in url_lower:
                         auto_risk = "🔴 高風險釣魚 (AI自動審核)"
                     else:
-                        auto_risk = "🟡 中度疑慮 (需人工複查)"
+                        auto_risk = "🟡 中度疑慮 (需注意)"
 
-                    # 永久寫入 Session 狀態
-                    st.session_state.wall_posts.insert(0, {
-                        "url": clean_url, 
-                        "desc": clean_desc, 
-                        "risk": auto_risk,
-                        "reporter": st.session_state.user_id
-                    })
-                    st.session_state.user_points += 100
-                    st.success(f"✅ 審核通過！系統判定：**{auto_risk}**。資料已成功儲存至警報牆，積分 +100 點已入帳！")
+                # 儲存通報與圖片
+                st.session_state.wall_posts.insert(0, {
+                    "url": clean_url, 
+                    "comment": clean_comment if clean_comment else "無額外留言說明。", 
+                    "risk": auto_risk,
+                    "reporter": st.session_state.user_id,
+                    "image": uploaded_file
+                })
+                st.session_state.user_points += 100
+                st.success(f"✅ 審核完成！系統判定：**{auto_risk}**。貼文已成功發布，積分 +100 點已入帳！")
+                st.rerun()
 
     st.markdown("---")
-    st.subheader("🔥 全校防詐即時警報清單（資料持續保留中）")
-    st.write(f"當前共有 **{len(st.session_state.wall_posts)}** 筆經過系統驗證的有效防詐通報：")
+    st.subheader("🔥 全校防詐動態與審核通報牆（完整公開列表）")
+    st.write(f"當前共有 **{len(st.session_state.wall_posts)}** 筆通報與審核紀錄：")
     
-    for post in st.session_state.wall_posts:
+    # 完整直接展開列出，不縮小、不摺疊
+    for idx, post in enumerate(st.session_state.wall_posts, 1):
         risk_badge = post.get('risk', '⚠️ 需注意')
         reporter_id = post.get('reporter', '匿名學生')
+        comment_text = post.get('comment', '')
+        img_file = post.get('image', None)
         
+        st.markdown(f"### 📌 通報紀錄 #{idx} ({reporter_id})")
         if "高風險" in risk_badge:
-            st.error(f"🚨 **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
+            st.error(f"**審核結果狀態：** {risk_badge}\n\n**檢測網址：** `{post['url']}`")
+        elif "合法" in risk_badge:
+            st.success(f"**審核結果狀態：** {risk_badge}\n\n**檢測網址：** `{post['url']}`")
         else:
-            st.warning(f"⚠️ **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
+            st.warning(f"**審核結果狀態：** {risk_badge}\n\n**檢測網址：** `{post['url']}`")
+            
+        st.markdown(f"💬 **使用者留言說明**：\n> {comment_text}")
+        
+        # 若有上傳截圖則直接完整顯示圖片
+        if img_file is not None:
+            st.image(img_file, caption=f"通報人 {reporter_id} 上傳的現場截圖佐證", use_column_width=True)
+            
+        st.markdown("---")
 
 # 4. 幸運餅乾
 elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
