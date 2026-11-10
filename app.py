@@ -3,8 +3,8 @@ import random
 
 # 頁面配置
 st.set_page_config(
-    page_title="結合影音與社群之數位資產素養平台",
-    page_icon="🛡️",
+    page_title="數位資產素養與社群防詐平台",
+    page_icon="📌",
     layout="wide"
 )
 
@@ -44,20 +44,20 @@ if 'wall_posts' not in st.session_state:
     ]
 
 # 頂部導覽列與即時積分狀態
-st.title("🛡️ Tasksnap 數位資產素養與社群防詐推廣平台")
-st.markdown("### 結合影音內容與社群媒體之新興數位資產素養推廣平台設計與經營")
+st.title("📌 數位資產素養與社群防詐推廣平台")
+st.markdown("### 結合影音內容與社群媒體之新興數位資產素養平台設計與經營")
 st.success("📌 **115學年度元培醫事科技大學資訊管理系畢業專題** | 指導老師：杜建志 老師 | 組員：林俊磊、吳品毅、林建愷、楊杰斯")
 
 # 計算當前素養等級與模擬排名
 pts = st.session_state.user_points
 if pts >= 400:
-    level_str = "🏆 Web3 資安防禦專家 (Lv.4)"
+    level_str = "🏆 資安防禦專家 (Lv.4)"
     rank_str = "全國排名 Top 5% (校內排名前 3名)"
 elif pts >= 250:
-    level_str = "🥈 Web3 資安進階防護生 (Lv.3)"
+    level_str = "🥈 資安進階防護生 (Lv.3)"
     rank_str = "全國排名 Top 18% (校內排名前 12名)"
 else:
-    level_str = "🥉 Web3 資安新手 (Lv.2)"
+    level_str = "🥉 資安新手 (Lv.2)"
     rank_str = "全國排名 Top 45% (急需提升防禦力)"
 
 # 積分與動態身分看板
@@ -66,28 +66,28 @@ col_s1, col_s2, col_s3 = st.columns(3)
 with col_s1:
     st.info(f"👤 **當前登入訪客編號**\n\n{st.session_state.user_id} (動態生成)")
 with col_s2:
-    st.warning(f"⭐ **平台學習積分 (Task Coins)**\n\n{st.session_state.user_points} 點")
+    st.warning(f"⭐ **平台學習積分 (Coins)**\n\n{st.session_state.user_points} 點")
 with col_s3:
-    st.success(f"🛡️ **資安素養防禦等級**\n\n{level_str}")
+    st.success(f"📌 **資安素養防禦等級**\n\n{level_str}")
 
 # 可點開查看詳細排名與等級對照的小頁面
 with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕排名對照表"):
     st.markdown(f"""
     * **訪客專屬代號**：`{st.session_state.user_id}`
-    * **累積學習積分**：`{st.session_state.user_points} 點 Task Coins`
+    * **累積學習積分**：`{st.session_state.user_points} 點 Coins`
     * **當前資安素養階級**：`{level_str}`
     * **即時同儕防禦排名**：`{rank_str}`
     """)
 
 st.markdown("---")
 
-# 🧭 側邊欄改用精簡的 radio 按鈕，文字不擁擠、完全展開！
+# 🧭 側邊欄導覽選單
 st.sidebar.title("🧭 系統功能導覽選單")
 menu = st.sidebar.radio("選擇功能分頁：", [
     "🏠 專題核心總覽",
     "🎬 短影音微學習專區",
-    "🛡️ 防詐網址審核與留言牆",
-    "🥠 Web3 幸運餅乾盲盒",
+    "🔍 防詐網址審核與留言牆",
+    "🥠 幸運餅乾盲盒",
     "👥 團隊成員與 WBS 分工"
 ])
 
@@ -95,7 +95,7 @@ menu = st.sidebar.radio("選擇功能分頁：", [
 if menu == "🏠 專題核心總覽":
     st.header("🏠 結合影音與社群之新興數位資產素養推廣平台")
     st.write("""
-    本專題（**Tasksnap**）針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育生態系。
+    本專題針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育生態系。
     """)
     
     col_c1, col_c2 = st.columns(2)
@@ -103,8 +103,8 @@ if menu == "🏠 專題核心總覽":
         st.markdown("### 🎬 核心模組一：影音內容驅動")
         st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
     with col_c2:
-        st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，支援即時網址審核、心得留言與詐騙現場截圖上傳。")
+        st.markdown("### 🔍 核心模組二：社群媒體互助")
+        st.warning("建構防詐警報網，支援即時網址審核、心得留言與詐騙現場截圖上傳。")
 
 # 2. 短影音學習
 elif menu == "🎬 短影音微學習專區":
@@ -175,9 +175,9 @@ elif menu == "🎬 短影音微學習專區":
         st.write("透過防刷分測驗與積分累積，即時評估您的 Web3 資安防禦等級。")
 
 # 3. 防詐動態牆
-elif menu == "🛡️ 防詐網址審核與留言牆":
-    st.header("🛡️ 社群防詐網址審核與實況截圖留言牆")
-    st.write("直接輸入可疑網址進行系統自動審核，並可留下心得留言與上傳詐騙現場截圖佐證！下方通報清單將完整直接展開。")
+elif menu == "🔍 防詐網址審核與留言牆":
+    st.header("🔍 社群防詐網址審核與實況截圖留言牆")
+    st.write("直接輸入可疑網址進行系統自動審核，並可留下心得留言與上傳詐騙現場截圖佐證！")
     
     with st.form("report_form", clear_on_submit=True):
         st.subheader("🚨 提交新網址審核與留言通報")
@@ -195,7 +195,6 @@ elif menu == "🛡️ 防詐網址審核與留言牆":
                 st.error("⚠️ 請輸入有效的完整網址（至少 4 個字元）！")
             else:
                 url_lower = clean_url.lower()
-                
                 trusted_official_domains = ["lbank.com", "binance.com", "okx.com", "bybit.com", "coinbase.com"]
                 is_trusted = any(domain in url_lower for domain in trusted_official_domains)
                 
@@ -239,28 +238,26 @@ elif menu == "🛡️ 防詐網址審核與留言牆":
             st.warning(f"**審核結果狀態：** {risk_badge}\n\n**檢測網址：** `{post['url']}`")
             
         st.markdown(f"💬 **使用者留言說明**：\n> {comment_text}")
-        
         if img_file is not None:
             st.image(img_file, caption=f"通報人 {reporter_id} 上傳的現場截圖佐證", use_column_width=True)
-            
         st.markdown("---")
 
 # 4. 幸運餅乾
-elif menu == "🥠 Web3 幸運餅乾盲盒":
-    st.header("🥠 Lucky Cookie Bite - Web3 資安幸運餅乾與防禦運勢")
-    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客**每日享有 3 次**抽取幸運餅乾的機會。")
+elif menu == "🥠 幸運餅乾盲盒":
+    st.header("🥠 Lucky Cookie - 資安幸運餅乾與防禦運勢")
+    st.write("結合趣味盲盒機制的互動遊戲！每位訪客**每日享有 3 次**抽取幸運餅乾的機會。")
     
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown(f"### 🥠 每日區塊鏈防詐盲盒 (剩餘次數: {3 - st.session_state.cookie_count} / 3)")
+        st.markdown(f"### 🥠 每日防詐盲盒 (剩餘次數: {3 - st.session_state.cookie_count} / 3)")
         
         if st.session_state.cookie_count < 3:
-            if st.button("✨ 咬開 Web3 幸運餅乾 (獲得 +30 積分)"):
+            if st.button("✨ 咬開幸運餅乾 (獲得 +30 積分)"):
                 fortunes = [
-                    ("🌟【極品大吉】資安防禦值爆表！", "今天沒有收到任何詐騙 Discord 私訊，您的錢包安全無虞，防禦力 +100！"),
-                    ("🍀【大吉】空投免疫達人！", "面對陌生私訊的免費 NFT 空投保持高度警覺，成功守住資產不歸零！"),
+                    ("🌟【極品大吉】資安防禦值爆表！", "今天沒有收到任何詐騙私訊，您的帳戶安全無虞，防禦力 +100！"),
+                    ("🍀【大吉】空投免疫達人！", "面對陌生私訊的免費空投保持高度警覺，成功守住資產不歸零！"),
                     ("🎯【中吉】冷錢包守護神降臨！", "助記詞切記實體抄寫，絕對不要存放在手機相簿或雲端備份中！"),
-                    ("💡【小吉】授權檢視專家！", "每次在去中心化交易所互動前，記得使用 Revoke.cash 檢查授權額度。"),
+                    ("💡【小吉】授權檢視專家！", "每次在互動前，記得檢查授權額度與安全性。"),
                     ("⚠️【小凶提醒】當心釣魚網址！", "近期群組常出現偽造授權網站，簽署交易前請務必核對網域正確性！")
                 ]
                 res_title, res_desc = random.choice(fortunes)
@@ -289,7 +286,7 @@ elif menu == "👥 團隊成員與 WBS 分工":
     * **執行單位**：元培醫事科技大學 資訊管理系 (115學年度)
     * **團隊成員與職責分工**：
       1. **林俊磊** (學號：1121408006，電話：0908586559) — 專題總籌、需求分析與防詐指標設定
-      2. **吳品毅** (學號：1121408004，電話：0905486080) — UI/UX 原型設計、短影音腳本企劃
+      2. **吳品毅** (學號：1121408004，電話：0905486080) — 系統介面與影音企劃
       3. **林建愷** (學號：1121408005，電話：0976230162) — 社群防詐動態牆與同儕驗證機制設計
       4. **楊杰斯** (學號：1121408026，電話：0975399476) — 官網與互動模擬系統實作
     """)
