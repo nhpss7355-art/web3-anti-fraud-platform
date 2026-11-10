@@ -81,17 +81,18 @@ with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕
 
 st.markdown("---")
 
-# 側邊欄分頁導覽
-menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
-    "🏠 專題核心總覽 (題目與架構)",
-    "🎬 沉浸式短影音學習 (防刷分測驗區)",
-    "🛡️ 防詐動態牆 (網址審核與截圖留言牆)",
-    "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)",
+# 🧭 側邊欄改用精簡的 radio 按鈕，文字不擁擠、完全展開！
+st.sidebar.title("🧭 系統功能導覽選單")
+menu = st.sidebar.radio("選擇功能分頁：", [
+    "🏠 專題核心總覽",
+    "🎬 短影音微學習專區",
+    "🛡️ 防詐網址審核與留言牆",
+    "🥠 Web3 幸運餅乾盲盒",
     "👥 團隊成員與 WBS 分工"
 ])
 
 # 1. 核心總覽
-if menu == "🏠 專題核心總覽 (題目與架構)":
+if menu == "🏠 專題核心總覽":
     st.header("🏠 結合影音與社群之新興數位資產素養推廣平台")
     st.write("""
     本專題（**Tasksnap**）針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育生態系。
@@ -106,7 +107,7 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
         st.warning("建構去中心化防詐警報網，支援即時網址審核、心得留言與詐騙現場截圖上傳。")
 
 # 2. 短影音學習
-elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
+elif menu == "🎬 短影音微學習專區":
     st.header("🎬 直立式短影音微學習與隨堂測驗專區")
     st.write("觀看資安短影音後，必須完成下方**隨堂防詐測驗**！答對即可獲得積分，每個單元限通關一次，杜絕重複刷分。")
     
@@ -173,8 +174,8 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
         st.markdown("### 📊 學習吸收成效")
         st.write("透過防刷分測驗與積分累積，即時評估您的 Web3 資安防禦等級。")
 
-# 3. 防詐動態牆 (直接審核網址 + 留言 + 截圖上傳 + 完整展開列表)
-elif menu == "🛡️ 防詐動態牆 (網址審核與截圖留言牆)":
+# 3. 防詐動態牆
+elif menu == "🛡️ 防詐網址審核與留言牆":
     st.header("🛡️ 社群防詐網址審核與實況截圖留言牆")
     st.write("直接輸入可疑網址進行系統自動審核，並可留下心得留言與上傳詐騙現場截圖佐證！下方通報清單將完整直接展開。")
     
@@ -195,7 +196,6 @@ elif menu == "🛡️ 防詐動態牆 (網址審核與截圖留言牆)":
             else:
                 url_lower = clean_url.lower()
                 
-                # 白名單與釣魚特徵判斷
                 trusted_official_domains = ["lbank.com", "binance.com", "okx.com", "bybit.com", "coinbase.com"]
                 is_trusted = any(domain in url_lower for domain in trusted_official_domains)
                 
@@ -209,7 +209,6 @@ elif menu == "🛡️ 防詐動態牆 (網址審核與截圖留言牆)":
                     else:
                         auto_risk = "🟡 中度疑慮 (需注意)"
 
-                # 儲存通報與圖片
                 st.session_state.wall_posts.insert(0, {
                     "url": clean_url, 
                     "comment": clean_comment if clean_comment else "無額外留言說明。", 
@@ -225,7 +224,6 @@ elif menu == "🛡️ 防詐動態牆 (網址審核與截圖留言牆)":
     st.subheader("🔥 全校防詐動態與審核通報牆（完整公開列表）")
     st.write(f"當前共有 **{len(st.session_state.wall_posts)}** 筆通報與審核紀錄：")
     
-    # 完整直接展開列出，不縮小、不摺疊
     for idx, post in enumerate(st.session_state.wall_posts, 1):
         risk_badge = post.get('risk', '⚠️ 需注意')
         reporter_id = post.get('reporter', '匿名學生')
@@ -242,14 +240,13 @@ elif menu == "🛡️ 防詐動態牆 (網址審核與截圖留言牆)":
             
         st.markdown(f"💬 **使用者留言說明**：\n> {comment_text}")
         
-        # 若有上傳截圖則直接完整顯示圖片
         if img_file is not None:
             st.image(img_file, caption=f"通報人 {reporter_id} 上傳的現場截圖佐證", use_column_width=True)
             
         st.markdown("---")
 
 # 4. 幸運餅乾
-elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
+elif menu == "🥠 Web3 幸運餅乾盲盒":
     st.header("🥠 Lucky Cookie Bite - Web3 資安幸運餅乾與防禦運勢")
     st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客**每日享有 3 次**抽取幸運餅乾的機會。")
     
