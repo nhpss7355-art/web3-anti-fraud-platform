@@ -20,16 +20,17 @@ if 'wall_posts' not in st.session_state:
 # 頂部導覽列與即時積分狀態
 st.title("🛡️ Tasksnap 新興數位資產素養與社群防詐平台")
 st.markdown("### 結合影音內容與社群媒體之新興數位資產素養推廣平台設計與經營")
-st.info("📌 **115學年度元培醫事科技大學資訊管理系畢業專題** | 指導老師：杜建志 老師 | 組員：林俊磊、吳品毅、林建愷、楊杰斯")
+st.success("📌 **115學年度元培醫事科技大學資訊管理系畢業專題** | 指導老師：杜建志 老師 | 組員：林俊磊、吳品毅、林建愷、楊杰斯")
 
-# 積分狀態看板
+# 積分狀態看板（獨立分開，絕對不擠壓）
+st.markdown("---")
 col_s1, col_s2, col_s3 = st.columns(3)
 with col_s1:
-    st.metric(label="👤 當前登入身分", value="學生 / 訪客 (ID: 1121408...)")
+    st.info("👤 **當前身分**\n\n學生 / 訪客 (ID: 1121408...)")
 with col_s2:
-    st.metric(label="⭐ Tasksnap 學習積分 (Task Coins)", value=f"{st.session_state.user_points} 點")
+    st.warning(f"⭐ **學習積分 (Task Coins)**\n\n{st.session_state.user_points} 點")
 with col_s3:
-    st.metric(label="🛡️ 資安防護素養等級", value="Web3 資安防護生 (Lv.2)")
+    st.success("🛡️ **資安素養等級**\n\nWeb3 資安防護生 (Lv.2)")
 
 st.markdown("---")
 
@@ -53,7 +54,7 @@ elif menu == "🎬 沉浸式短影音學習 (賺積分)":
     st.header("🎬 直立式短影音微學習專區")
     st.write("觀看專題企劃之硬核資安短影音，完成隨堂挑戰即可賺取學習積分！")
     
-    col_v1, col_v2 = st.columns([1, 1])
+    col_v1, col_v2 = st.columns(2)
     with col_v1:
         st.markdown("### 📱 手機模擬播放器")
         video_choice = st.selectbox("選擇學習單元：", [
@@ -62,16 +63,17 @@ elif menu == "🎬 沉浸式短影音學習 (賺積分)":
             "單元 3：小心 Permit2 無限授權合約"
         ])
         if "單元 1" in video_choice:
-            st.info("▶️ 播放中：助記詞絕對不上雲端\n\n*核心觀念：私鑰與助記詞為資產完全控制權，絕對不可截圖存於手機相簿！*")
+            st.info("▶️ **播放中：助記詞絕對不上雲端**\n\n*核心觀念：私鑰與助記詞為資產完全控制權，絕對不可截圖存於手機相簿！*")
         elif "單元 2" in video_choice:
-            st.warning("▶️ 播放中：識別 Discord 假官方空投\n\n*核心觀念：陌生私訊送免費空投 99% 具備釣魚惡意合約！*")
+            st.warning("▶️ **播放中：識別 Discord 假官方空投**\n\n*核心觀念：陌生私訊送免費空投 99% 具備釣魚惡意合約！*")
         else:
-            st.success("▶️ 播放中：小心 Permit2 無限授權合約\n\n*核心觀念：互動前使用 Etherscan 檢查授權額度。*")
+            st.success("▶️ **播放中：小心 Permit2 無限授權合約**\n\n*核心觀念：互動前使用 Etherscan 檢查授權額度。*")
             
         if st.button("✅ 完成本單元測驗 (領取 +50 積分)"):
             st.session_state.user_points += 50
             st.balloons()
             st.success("🎉 測驗成功！積分 +50 點已入帳！")
+            st.rerun()
 
     with col_v2:
         st.markdown("### 💡 學習成效與積分累積機制")
@@ -126,6 +128,7 @@ elif menu == "🥠 資安幸運餅乾 (抽獎系統)":
         st.session_state.user_points += 30
         st.success(f"🎉 抽獎成功！獲得積分 +30 點！\n\n### {res}")
         st.balloons()
+        st.rerun()
 
 # 5. 團隊分工
 elif menu == "👥 團隊成員與 WBS 分工":
@@ -134,8 +137,8 @@ elif menu == "👥 團隊成員與 WBS 分工":
     * **指導老師**：杜建志 老師
     * **執行單位**：元培醫事科技大學 資訊管理系 (115學年度)
     * **團隊成員與職責分工**：
-      1. **林俊磊** (學號：1121408006，電話：0908586559) — 專題總籌、需求分析與防詐指標設定
-      2. **吳品毅** (學號：1121408004，電話：0905486080) — UI/UX 原型設計、短影音腳本企劃
+      1. **林俊磊** (學號：1121408006，電話：0908586559) — 專題總籌, 需求分析與防詐指標設定
+      2. **吳品毅** (學號：1121408004，電話：0905486080) — UI/UX 原型設計, 短影音腳本企劃
       3. **林建愷** (學號：1121408005，電話：0976230162) — 社群防詐動態牆與同儕驗證機制設計
       4. **楊杰斯** (學號：1121408026，電話：0975399476) — Python 官網與互動模擬系統實作
     """)
