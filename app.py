@@ -13,10 +13,12 @@ if 'user_id' not in st.session_state:
     st.session_state.user_id = f"Student-{random.randint(10000, 99999)}"
 if 'user_points' not in st.session_state:
     st.session_state.user_points = 150
-if 'cookie_drawn' not in st.session_state:
-    st.session_state.cookie_drawn = False
-if 'cookie_result' not in st.session_state:
-    st.session_state.cookie_result = None
+
+# 幸運餅乾改為每日 3 次限制
+if 'cookie_count' not in st.session_state:
+    st.session_state.cookie_count = 0  # 已抽次數 (上限 3 次)
+if 'cookie_history' not in st.session_state:
+    st.session_state.cookie_history = []  # 紀錄抽到的籤文
 
 # 紀錄每個單元是否已經通關過（防止重複刷積分）
 if 'completed_units' not in st.session_state:
@@ -33,6 +35,18 @@ st.title("🛡️ Tasksnap 數位資產素養與社群防詐推廣平台")
 st.markdown("### 結合影音內容與社群媒體之新興數位資產素養推廣平台設計與經營")
 st.success("📌 **115學年度元培醫事科技大學資訊管理系畢業專題** | 指導老師：杜建志 老師 | 組員：林俊磊、吳品毅、林建愷、楊杰斯")
 
+# 計算當前素養等級與模擬排名
+pts = st.session_state.user_points
+if pts >= 400:
+    level_str = "🏆 Web3 資安防禦專家 (Lv.4)"
+    rank_str = "全國排名 Top 5% (校內排名前 3名)"
+elif pts >= 250:
+    level_str = "🥈 Web3 資安進階防護生 (Lv.3)"
+    rank_str = "全國排名 Top 18% (校內排名前 12名)"
+else:
+    level_str = "🥉 Web3 資安新手 (Lv.2)"
+    rank_str = "全國排名 Top 45% (急需提升防禦力)"
+
 # 積分與動態身分看板
 st.markdown("---")
 col_s1, col_s2, col_s3 = st.columns(3)
@@ -41,15 +55,23 @@ with col_s1:
 with col_s2:
     st.warning(f"⭐ **平台學習積分 (Task Coins)**\n\n{st.session_state.user_points} 點")
 with col_s3:
-    # 根據總積分自動判定資安素養吸收等級
-    pts = st.session_state.user_points
-    if pts >= 350:
-        level_str = "🏆 Web3 資安防禦專家 (Lv.4)"
-    elif pts >= 250:
-        level_str = "🥈 Web3 資安進階防護生 (Lv.3)"
-    else:
-        level_str = "🥉 Web3 資安新手 (Lv.2)"
-    st.success(f"🛡️ **資安素養吸收評級**\n\n{level_str}")
+    st.success(f"🛡️ **資安素養防禦等級**\n\n{level_str}")
+
+# 🚀 新增：可點開查看詳細排名與等級對照的小頁面（Expander）
+with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕排名對照表"):
+    st.markdown(f"""
+    ### 🎯 您的當前帳號表現總結
+    * **訪客專屬代號**：`{st.session_state.user_id}`
+    * **累積學習積分**：`{st.session_state.user_points} 點 Task Coins`
+    * **當前資安素養階級**：`{level_str}`
+    * **即時同儕防禦排名**：`{rank_str}`
+    
+    ---
+    ### 📚 平台素養等級對照標準：
+    * **🏆 Web3 資安防禦專家 (Lv.4)**：積分 $\\ge$ 400 點（具備極高釣魚辨識與社群通報能力）
+    * **🥈 Web3 資安進階防護生 (Lv.3)**：積分 250 ~ 399 點（掌握短影音微學習與基本合約授權防範）
+    * **🥉 Web3 資安新手 (Lv.2)**：積分 $<$ 250 點（剛接觸數位資產，建議多觀看短影音與抽取幸運餅乾）
+    """)
 
 st.markdown("---")
 
@@ -58,7 +80,7 @@ menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
     "🏠 專題核心總覽 (題目與架構)",
     "🎬 沉浸式短影音學習 (防刷分測驗區)",
     "🛡️ 防詐動態牆 (社群通報與同儕驗證)",
-    "🥠 Lucky Cookie Bite (Web3 幸運餅乾)",
+    "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)",
     "👥 團隊成員與 WBS 分工"
 ])
 
@@ -77,7 +99,7 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
         st.warning("建構去中心化防詐警報網，使用者可即時通報可疑釣魚網站，透過同儕驗證機制抵抗詐騙。")
 
-# 2. 短影音學習 (擴充單元 + 互動答題 + 防刷分機制)
+# 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
     st.header("🎬 直立式短影音微學習與隨堂測驗專區")
     st.write("觀看資安短影音後，必須完成下方**隨堂防詐測驗**！答對即可獲得積分，每個單元限通關一次，杜絕重複刷分。")
@@ -94,7 +116,6 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
             "單元 5：私鑰保管與硬體錢包安全"
         ])
         
-        # 顯示對應影片觀念
         if "單元 1" in unit_choice:
             u_key = "unit_1"
             st.info("▶️ **播放中：助記詞絕對不上雲端**\n\n*核心觀念：私鑰與助記詞為資產完全控制權，絕對不可截圖存於手機相簿！*")
@@ -126,7 +147,6 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
             options = ["用筆抄在實體紙張上並妥善鎖在保險箱", "用手機拍照存在雲端相簿", "發到自己的 LINE 記事本"]
             correct_ans = "用筆抄在實體紙張上並妥善鎖在保險箱"
 
-        # 檢查該單元是否已經通關過
         if u_key in st.session_state.completed_units:
             st.success("✅ **本單元測驗已通關！**（每個單元限得獎勵一次，無法重複刷分）")
         else:
@@ -148,7 +168,7 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
         st.write("""
         * **防刷分機制**：系統透過學員通關紀錄追蹤，確保每位使用者各單元僅能獲得一次獎勵，杜絕惡意洗分。
         * **答對與答錯回饋**：透過即時正負向回饋，強化學生對社交工程與釣魚攻擊的直覺反應。
-        * **素養吸收判定**：系統會根據您累積的總積分（Task Coins），自動將您的資安防禦等級劃分為新手、進階或專家，適合作為期末專題成效評估依據！
+        * **素養吸收判定**：系統會根據您累積的總積分（Task Coins），自動將您的資安防禦等級與同儕排名即時更新！
         """)
 
 # 3. 防詐動態牆
@@ -183,17 +203,17 @@ elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
                 st.success("👍 驗證投票成功！積分 +10 點！")
                 st.rerun()
 
-# 4. 幸運餅乾
-elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾)":
+# 4. 幸運餅乾 (改為每日可抽 3 次，並展示抽獎紀錄)
+elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
     st.header("🥠 Lucky Cookie Bite - Web3 資安幸運餅乾與防禦運勢")
-    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客每日僅能抽取一次幸運餅乾，解鎖專屬防詐錦囊與積分！")
+    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客**每日享有 3 次**抽取幸運餅乾的機會，解鎖專屬防詐錦囊與積分！")
     
-    col_g1, col_g2 = st.columns([1, 1])
+    col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown("### 🥠 每日區塊鏈防詐盲盒（防洗分限制）")
+        st.markdown(f"### 🥠 每日區塊鏈防詐盲盒 (剩餘次數: {3 - st.session_state.cookie_count} / 3)")
         
-        if not st.session_state.cookie_drawn:
-            if st.button("✨ 咬開今日 Web3 幸運餅乾 (獲得 +30 積分)"):
+        if st.session_state.cookie_count < 3:
+            if st.button("✨ 咬開 Web3 幸運餅乾 (獲得 +30 積分)"):
                 fortunes = [
                     ("🌟【極品大吉】資安防禦值爆表！", "今天沒有收到任何詐騙 Discord 私訊，您的錢包安全無虞，防禦力 +100！"),
                     ("🍀【大吉】空投免疫達人！", "面對陌生私訊的免費 NFT 空投保持高度警覺，成功守住資產不歸零！"),
@@ -201,19 +221,24 @@ elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾)":
                     ("💡【小吉】授權檢視專家！", "每次在去中心化交易所互動前，記得使用 Revoke.cash 檢查授權額度。"),
                     ("⚠️【小凶提醒】當心釣魚網址！", "近期群組常出現偽造授權網站，簽署交易前請務必核對網域正確性！")
                 ]
-                st.session_state.cookie_result = random.choice(fortunes)
-                st.session_state.cookie_drawn = True
+                res_title, res_desc = random.choice(fortunes)
+                st.session_state.cookie_count += 1
                 st.session_state.user_points += 30
+                st.session_state.cookie_history.append((res_title, res_desc))
                 st.balloons()
                 st.rerun()
         else:
-            st.warning("🔒 您今天已經抽取過幸運餅乾囉！每位訪客每日限抽一次，以確保防詐積分機制的公平性。")
-            title, desc = st.session_state.cookie_result
-            st.success(f"### {title}\n*{desc}*")
+            st.warning("🔒 您今日的 3 次幸運餅乾額度已全部使用完畢！請明天再來或透過短影音學習賺取更多積分。")
+            
+        # 顯示今日已抽過的籤文紀錄
+        if st.session_state.cookie_history:
+            st.markdown("### 📜 您今日抽到的防詐籤文紀錄：")
+            for i, (t, d) in enumerate(st.session_state.cookie_history, 1):
+                st.info(f"**第 {i} 次抽獎**：{t}\n*{d}*")
     
     with col_g2:
-        st.markdown("### 🏆 幸運餅乾設計邏輯與亮點")
-        st.info("• **防洗分機制**：透過 Session 紀錄抽獎狀態，防止重複點擊洗積分。\n• **多元中獎序列**：內含 5 種不同等級的籤文，增加互動驚喜感！")
+        st.markdown("### 🏆 幸運餅乾機制設計說明")
+        st.info("• **次數限制**：每位訪客每日限制 **3 次** 抽獎機會，兼顧遊戲趣味與公平性。\n• **多元籤文序列**：內含 5 種不同資安防禦等級的盲盒籤文。\n• **積分連動**：每次中獎自動累計 Task Coins，同步推升您的素養防禦排名！")
 
 # 5. 團隊分工
 elif menu == "👥 團隊成員與 WBS 分工":
