@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import re
 
 # 頁面配置
 st.set_page_config(
@@ -16,18 +17,18 @@ if 'user_points' not in st.session_state:
 
 # 幸運餅乾改為每日 3 次限制
 if 'cookie_count' not in st.session_state:
-    st.session_state.cookie_count = 0  # 已抽次數 (上限 3 次)
+    st.session_state.cookie_count = 0
 if 'cookie_history' not in st.session_state:
-    st.session_state.cookie_history = []  # 紀錄抽到的籤文
+    st.session_state.cookie_history = []
 
-# 紀錄每個單元是否已經通關過（防止重複刷積分）
+# 紀錄每個單元是否已經通關過
 if 'completed_units' not in st.session_state:
     st.session_state.completed_units = []
 
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
-        {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "votes": 42},
-        {"url": "Discord 假官方支援小幫手 (Support#8821)", "desc": "私訊聲稱錢包驗證失敗，要求提供助記詞協助解鎖。", "votes": 38}
+        {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "risk": "🔴 高風險釣魚", "votes": 42},
+        {"url": "Discord 假官方支援小幫手 (Support#8821)", "desc": "私訊聲稱錢包驗證失敗，要求提供助記詞協助解鎖。", "risk": "🔴 高風險社交工程", "votes": 38}
     ]
 
 # 頂部導覽列與即時積分狀態
@@ -57,7 +58,7 @@ with col_s2:
 with col_s3:
     st.success(f"🛡️ **資安素養防禦等級**\n\n{level_str}")
 
-# 🚀 新增：可點開查看詳細排名與等級對照的小頁面（Expander）
+# 可點開查看詳細排名與等級對照的小頁面
 with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕排名對照表"):
     st.markdown(f"""
     ### 🎯 您的當前帳號表現總結
@@ -68,9 +69,9 @@ with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕
     
     ---
     ### 📚 平台素養等級對照標準：
-    * **🏆 Web3 資安防禦專家 (Lv.4)**：積分 $\\ge$ 400 點（具備極高釣魚辨識與社群通報能力）
-    * **🥈 Web3 資安進階防護生 (Lv.3)**：積分 250 ~ 399 點（掌握短影音微學習與基本合約授權防範）
-    * **🥉 Web3 資安新手 (Lv.2)**：積分 $<$ 250 點（剛接觸數位資產，建議多觀看短影音與抽取幸運餅乾）
+    * **🏆 Web3 資安防禦專家 (Lv.4)**：積分 $\\ge$ 400 點
+    * **🥈 Web3 資安進階防護生 (Lv.3)**：積分 250 ~ 399 點
+    * **🥉 Web3 資安新手 (Lv.2)**：積分 $<$ 250 點
     """)
 
 st.markdown("---")
@@ -79,7 +80,7 @@ st.markdown("---")
 menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
     "🏠 專題核心總覽 (題目與架構)",
     "🎬 沉浸式短影音學習 (防刷分測驗區)",
-    "🛡️ 防詐動態牆 (社群通報與同儕驗證)",
+    "🛡️ 防詐動態牆 (AI自動分析與同儕驗證)",
     "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)",
     "👥 團隊成員與 WBS 分工"
 ])
@@ -97,7 +98,7 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
         st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
     with col_c2:
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，使用者可即時通報可疑釣魚網站，透過同儕驗證機制抵抗詐騙。")
+        st.warning("建構去中心化防詐警報網，內建 AI 自動特徵分析引擎，並透過同儕驗證機制抵抗詐騙。")
 
 # 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
@@ -166,36 +167,57 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
     with col_v2:
         st.markdown("### 📊 學習吸收成效與總結算機制")
         st.write("""
-        * **防刷分機制**：系統透過學員通關紀錄追蹤，確保每位使用者各單元僅能獲得一次獎勵，杜絕惡意洗分。
-        * **答對與答錯回饋**：透過即時正負向回饋，強化學生對社交工程與釣魚攻擊的直覺反應。
-        * **素養吸收判定**：系統會根據您累積的總積分（Task Coins），自動將您的資安防禦等級與同儕排名即時更新！
+        * **防刷分機制**：系統透過學員通關紀錄追蹤，確保每位使用者各單元僅能獲得一次獎勵。
+        * **素養吸收判定**：根據總積分自動將您的資安防禦等級與同儕排名即時更新！
         """)
 
-# 3. 防詐動態牆
-elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
-    st.header("🛡️ 社群防詐警報通報與同儕驗證動態牆")
-    st.write("集結社群同儕智慧，即時通報疑慮連結與詐騙手法！")
+# 3. 防詐動態牆 (內建 AI 網址自動分析引擎)
+elif menu == "🛡️ 防詐動態牆 (AI自動分析與同儕驗證)":
+    st.header("🛡️ 社群防詐警報通報與 AI 自動特徵分析引擎")
+    st.write("集結社群智慧與程式自動化審核！當您輸入可疑網址時，系統後端會自動進行關鍵字與釣魚特徵交叉分析。")
     
     with st.form("report_form"):
-        st.subheader("🚨 發起新的社群防詐通報")
-        input_url = st.text_input("可疑網址 / 詐騙帳號名稱：", placeholder="例如：fake-opensea-airdrop.io")
+        st.subheader("🚨 發起新的社群防詐通報與自動分析")
+        input_url = st.text_input("可疑網址 / 詐騙帳號名稱：", placeholder="例如：fake-uniswap-airdrop.com")
         input_desc = st.text_area("詐騙手法描述：", placeholder="例如：聲稱抽中免費 NFT，連接錢包後立刻被轉走...")
-        submitted = st.form_submit_button("立即發布通報 (賺取 +100 積分)")
+        submitted = st.form_submit_button("🤖 執行自動檢測並發布通報 (賺取 +100 積分)")
         
         if submitted:
             if input_url:
-                st.session_state.wall_posts.insert(0, {"url": input_url, "desc": input_desc, "votes": 1})
+                # 🧠 Python 內建的 AI 網址特徵分析邏輯
+                url_lower = input_url.lower()
+                risk_keywords = ["airdrop", "free", "claim", "connect", "verify", "reward", "gift", "support", "bonus", "wallet", "unisw", "opensea"]
+                match_count = sum(1 for kw in risk_keywords if kw in url_lower)
+                
+                if match_count >= 2 or "-" in url_lower or len(url_lower) > 25:
+                    auto_risk = "🔴 高風險釣魚 (AI自動判定)"
+                elif match_count == 1:
+                    auto_risk = "🟡 中度疑慮 (需注意)"
+                else:
+                    auto_risk = "🟢 正常/待驗證"
+
+                # 插入動態牆
+                st.session_state.wall_posts.insert(0, {
+                    "url": input_url, 
+                    "desc": f"{input_desc} [系統自動檢測：{auto_risk}]", 
+                    "risk": auto_risk,
+                    "votes": 1
+                })
                 st.session_state.user_points += 100
-                st.success(f"✅ 成功發布通報「{input_url}」！社群防詐積分 +100 點已入帳！")
+                st.success(f"✅ AI 檢測完成！系統判定結果：**{auto_risk}**。積分 +100 點已入帳！")
             else:
                 st.error("⚠️ 請輸入可疑網址或帳號名稱！")
 
     st.markdown("---")
-    st.subheader("🔥 當前社群熱門防詐通報清單")
+    st.subheader("🔥 當前社群熱門防詐通報清單（含 AI 審核標籤）")
     for idx, post in enumerate(st.session_state.wall_posts):
         col_p1, col_p2 = st.columns([3, 1])
         with col_p1:
-            st.error(f"🚨 **{post['url']}**\n\n描述：{post['desc']}")
+            risk_badge = post.get('risk', '⚠️ 需注意')
+            if "高風險" in risk_badge:
+                st.error(f"🚨 **{post['url']}** [{risk_badge}]\n\n描述：{post['desc']}")
+            else:
+                st.warning(f"⚠️ **{post['url']}** [{risk_badge}]\n\n描述：{post['desc']}")
         with col_p2:
             if st.button(f"👍 確實是詐騙 ({post['votes']})", key=f"vote_{idx}"):
                 st.session_state.wall_posts[idx]['votes'] += 1
@@ -203,10 +225,10 @@ elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
                 st.success("👍 驗證投票成功！積分 +10 點！")
                 st.rerun()
 
-# 4. 幸運餅乾 (改為每日可抽 3 次，並展示抽獎紀錄)
+# 4. 幸運餅乾
 elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
     st.header("🥠 Lucky Cookie Bite - Web3 資安幸運餅乾與防禦運勢")
-    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客**每日享有 3 次**抽取幸運餅乾的機會，解鎖專屬防詐錦囊與積分！")
+    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客**每日享有 3 次**抽取幸運餅乾的機會。")
     
     col_g1, col_g2 = st.columns(2)
     with col_g1:
@@ -228,9 +250,8 @@ elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
                 st.balloons()
                 st.rerun()
         else:
-            st.warning("🔒 您今日的 3 次幸運餅乾額度已全部使用完畢！請明天再來或透過短影音學習賺取更多積分。")
+            st.warning("🔒 您今日的 3 次幸運餅乾額度已全部使用完畢！")
             
-        # 顯示今日已抽過的籤文紀錄
         if st.session_state.cookie_history:
             st.markdown("### 📜 您今日抽到的防詐籤文紀錄：")
             for i, (t, d) in enumerate(st.session_state.cookie_history, 1):
@@ -238,7 +259,7 @@ elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
     
     with col_g2:
         st.markdown("### 🏆 幸運餅乾機制設計說明")
-        st.info("• **次數限制**：每位訪客每日限制 **3 次** 抽獎機會，兼顧遊戲趣味與公平性。\n• **多元籤文序列**：內含 5 種不同資安防禦等級的盲盒籤文。\n• **積分連動**：每次中獎自動累計 Task Coins，同步推升您的素養防禦排名！")
+        st.info("• **次數限制**：每位訪客每日限制 **3 次** 抽獎機會。\n• **多元籤文序列**：內含 5 種不同資安防禦等級的盲盒籤文。")
 
 # 5. 團隊分工
 elif menu == "👥 團隊成員與 WBS 分工":
