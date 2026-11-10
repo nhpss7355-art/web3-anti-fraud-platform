@@ -8,9 +8,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# 初始化 Session State 儲存積分與動態牆資料
+# 初始化 Session State（亂數產生專屬訪客編號，不再每個人都一樣！）
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = f"Student-{random.randint(10000, 99999)}"
 if 'user_points' not in st.session_state:
     st.session_state.user_points = 150
+if 'cookie_drawn' not in st.session_state:
+    st.session_state.cookie_drawn = False
+if 'cookie_result' not in st.session_state:
+    st.session_state.cookie_result = None
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
         {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "votes": 42},
@@ -22,11 +28,11 @@ st.title("🛡️ Tasksnap 數位資產素養與社群防詐推廣平台")
 st.markdown("### 結合影音內容與社群媒體之新興數位資產素養推廣平台設計與經營")
 st.success("📌 **115學年度元培醫事科技大學資訊管理系畢業專題** | 指導老師：杜建志 老師 | 組員：林俊磊、吳品毅、林建愷、楊杰斯")
 
-# 積分狀態看板（獨立分開，整齊美觀）
+# 積分與動態身分看板
 st.markdown("---")
 col_s1, col_s2, col_s3 = st.columns(3)
 with col_s1:
-    st.info("👤 **當前身分**\n\n學生 / 訪客 (ID: 1121408...)")
+    st.info(f"👤 **當前登入訪客編號**\n\n{st.session_state.user_id} (動態生成)")
 with col_s2:
     st.warning(f"⭐ **平台學習積分 (Task Coins)**\n\n{st.session_state.user_points} 點")
 with col_s3:
@@ -47,17 +53,16 @@ menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
 if menu == "🏠 專題核心總覽 (題目與架構)":
     st.header("🏠 結合影音與社群之新興數位資產素養推廣平台")
     st.write("""
-    隨著 Web3、加密貨幣與數位資產的普及，青年族群面臨高度的資訊碎片化與新型態社交工程詐騙風險。
-    本專題（**Tasksnap**）打破傳統僵化的法規宣導，首創結合**「直立式短影音微學習」**與**「社群媒體同儕防詐互助」**，打造全方位的數位資產素養教育生態系。
+    本專題（**Tasksnap**）針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育生態系。
     """)
     
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         st.markdown("### 🎬 核心模組一：影音內容驅動")
-        st.info("將複雜的區塊鏈資安（助記詞保護、冷熱錢包、無限授權 Permit2）拆解為 30-60 秒沉浸式短影音，利用碎片化時間提升 Z 世代素養。")
+        st.info("將複雜的區塊鏈資安（助記詞保護、冷熱錢包、無限授權 Permit2）拆解為 30-60 秒沉浸式短影音。")
     with col_c2:
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，使用者可即時通報可疑釣魚網站，透過社群同儕驗證機制（Peer-validation）共同抵抗詐騙。")
+        st.warning("建構去中心化防詐警報網，使用者可即時通報可疑釣魚網站，透過社群同儕驗證機制抵抗詐騙。")
 
 # 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (微學習專區)":
@@ -87,7 +92,7 @@ elif menu == "🎬 沉浸式短影音學習 (微學習專區)":
 
     with col_v2:
         st.markdown("### 💡 影音素養推廣成效")
-        st.write("經專題實驗證實，透過短影音與互動測驗相結合，學生的資安風險辨識能力顯著提升，有效防範社交工程與釣魚攻擊。")
+        st.write("經實驗證實，透過短影音與互動測驗相結合，學生的資安風險辨識能力顯著提升，有效防範社交工程攻擊。")
 
 # 3. 防詐動態牆
 elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
@@ -121,29 +126,37 @@ elif menu == "🛡️ 防詐動態牆 (社群通報與同儕驗證)":
                 st.success("👍 驗證投票成功！積分 +10 點！")
                 st.rerun()
 
-# 4. 幸運餅乾 (大幅優化)
+# 4. 幸運餅乾 (限制每日只能抽一次，並擴充豐富的中獎序列)
 elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾)":
     st.header("🥠 Lucky Cookie Bite - Web3 資安幸運餅乾與防禦運勢")
-    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每次咬開幸運餅乾，不僅能測驗今日資安防禦運勢，還能解鎖防詐錦囊與專屬積分獎勵！")
+    st.write("結合 Web3 趣味盲盒機制的互動遊戲！每位訪客每日僅能抽取一次幸運餅乾，解鎖專屬防詐錦囊與積分！")
     
     col_g1, col_g2 = st.columns([1, 1])
     with col_g1:
-        st.markdown("### 🥠 每日區塊鏈防詐盲盒")
-        if st.button("✨ 咬開今日 Web3 幸運餅乾 (獲得 +30 積分)"):
-            fortunes = [
-                ("【大吉】資安防禦值爆表！", "今天沒有收到任何詐騙 Discord 私訊，您的錢包安全無虞！"),
-                ("【中吉】冷錢包守護神降臨！", "助記詞切記實體抄寫，千萬不要存放在手機相簿或雲端備份中！"),
-                ("【小吉】授權檢視達人！", "每次在去中心化交易所互動前，記得使用 Revoke.cash 檢查授權額度。"),
-                ("【大吉】空投陷阱免疫！", "面對陌生私訊的免費 NFT 空投保持高度警覺，守住資產不歸零！")
-            ]
-            title, desc = random.choice(fortunes)
-            st.session_state.user_points += 30
-            st.success(f"🎉 恭喜咬開幸運餅乾！獲得 +30 積分！\n\n### {title}\n*{desc}*")
-            st.balloons()
+        st.markdown("### 🥠 每日區塊鏈防詐盲盒（防洗分限制）")
+        
+        if not st.session_state.cookie_drawn:
+            if st.button("✨ 咬開今日 Web3 幸運餅乾 (獲得 +30 積分)"):
+                fortunes = [
+                    ("🌟【極品大吉】資安防禦值爆表！", "今天沒有收到任何詐騙 Discord 私訊，您的錢包安全無虞，防禦力 +100！"),
+                    ("🍀【大吉】空投免疫達人！", "面對陌生私訊的免費 NFT 空投保持高度警覺，成功守住資產不歸零！"),
+                    ("🎯【中吉】冷錢包守護神降臨！", "助記詞切記實體抄寫，絕對不要存放在手機相簿或雲端備份中！"),
+                    ("💡【小吉】授權檢視專家！", "每次在去中心化交易所互動前，記得使用 Revoke.cash 檢查授權額度。"),
+                    ("⚠️【小凶提醒】當心釣魚網址！", "近期群組常出現偽造授權網站，簽署交易前請務必核對網域正確性！")
+                ]
+                st.session_state.cookie_result = random.choice(fortunes)
+                st.session_state.cookie_drawn = True
+                st.session_state.user_points += 30
+                st.balloons()
+                st.rerun()
+        else:
+            st.warning("🔒 您今天已經抽取過幸運餅乾囉！每位訪客每日限抽一次，以確保防詐積分機制的公平性。")
+            title, desc = st.session_state.cookie_result
+            st.success(f"### {title}\n*{desc}*")
     
     with col_g2:
-        st.markdown("### 🏆 幸運餅乾設計理念")
-        st.info("透過遊戲化設計（Gamification）提升學生黏著度，將生硬的區塊鏈防詐知識轉化為趣味籤文，實現寓教於樂的專題核心精神。")
+        st.markdown("### 🏆 幸運餅乾設計邏輯與亮點")
+        st.info("• **防洗分機制**：透過 Session 紀錄抽獎狀態，防止重複點擊洗積分。\n• **多元中獎序列**：內含 5 種不同等級的籤文（極品大吉、大吉、中吉、小吉、小凶提醒），增加互動驚喜感！")
 
 # 5. 團隊分工
 elif menu == "👥 團隊成員與 WBS 分工":
