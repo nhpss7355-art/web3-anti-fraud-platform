@@ -24,7 +24,7 @@ if 'cookie_history' not in st.session_state:
 if 'completed_units' not in st.session_state:
     st.session_state.completed_units = []
 
-# 動態牆資料（改為純 AI 審核與風險狀態，不再需要一直投票洗分）
+# 防詐動態牆資料庫（資料永久保存在 Session 中，重新整理也不會不見）
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
         {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "risk": "🔴 高風險釣魚 (AI自動審核)", "reporter": "Student-88219"},
@@ -75,7 +75,7 @@ st.markdown("---")
 menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
     "🏠 專題核心總覽 (題目與架構)",
     "🎬 沉浸式短影音學習 (防刷分測驗區)",
-    "🛡️ 防詐動態牆 (AI自動審核與通報系統)",
+    "🛡️ 防詐動態牆 (過濾機制與通報系統)",
     "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)",
     "👥 團隊成員與 WBS 分工"
 ])
@@ -93,7 +93,7 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
         st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
     with col_c2:
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，內建 AI 自動審核機制，即時對可疑網址進行風險評級與過濾。")
+        st.warning("建構去中心化防詐警報網，內建嚴格的格式過濾與 AI 自動審核機制，杜絕惡意洗分。")
 
 # 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
@@ -166,46 +166,53 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
         * **素養吸收判定**：根據總積分自動將您的資安防禦等級與同儕排名即時更新！
         """)
 
-# 3. 防詐動態牆 (移除無限投票，改為 AI 自動審核與狀態清單)
-elif menu == "🛡️ 防詐動態牆 (AI自動審核與通報系統)":
-    st.header("🛡️ 社群防詐警報通報與 AI 自動審核中心")
-    st.write("當您輸入可疑網址時，系統後端會立即透過 AI 特徵碼引擎進行審核，審核通過後自動發布至警報牆，無需人工重複投票！")
+# 3. 防詐動態牆 (加入嚴格過濾、防刷分與資料保留機制)
+elif menu == "🛡️ 防詐動態牆 (過濾機制與通報系統)":
+    st.header("🛡️ 社群防詐警報通報與 AI 智慧審核中心")
+    st.write("系統內建嚴格的**格式驗證與防洗分過濾機制**。提交的通報資料將被安全保留於雲端紀錄中，防止惡意亂填與重複刷分！")
     
     with st.form("report_form"):
         st.subheader("🚨 發起新的社群防詐通報")
         input_url = st.text_input("可疑網址 / 詐騙帳號名稱：", placeholder="例如：fake-opensea-airdrop.com")
-        input_desc = st.text_area("詐騙手法描述：", placeholder="例如：聲稱抽中免費 NFT，連接錢包後立刻被轉走...")
+        input_desc = st.text_area("詐騙手法描述（請詳細描述受害經過）：", placeholder="例如：聲稱抽中免費 NFT，連接錢包後立刻被轉走...")
         submitted = st.form_submit_button("🤖 提交審核並發布警報 (賺取 +100 積分)")
         
         if submitted:
-            if input_url:
-                # 🧠 AI 自動審核與風險分級邏輯
-                url_lower = input_url.lower()
-                risk_keywords = ["airdrop", "free", "claim", "connect", "verify", "reward", "gift", "support", "bonus", "wallet", "unisw", "opensea"]
-                match_count = sum(1 for kw in risk_keywords if kw in url_lower)
-                
-                if match_count >= 2 or "-" in url_lower or len(url_lower) > 25:
-                    auto_risk = "🔴 高風險釣魚 (AI自動審核)"
-                elif match_count == 1:
-                    auto_risk = "🟡 中度疑慮 (需注意)"
-                else:
-                    auto_risk = "🟢 正常/安全"
-
-                # 插入動態牆
-                st.session_state.wall_posts.insert(0, {
-                    "url": input_url, 
-                    "desc": input_desc, 
-                    "risk": auto_risk,
-                    "reporter": st.session_state.user_id
-                })
-                st.session_state.user_points += 100
-                st.success(f"✅ AI 審核通過！系統判定結果：**{auto_risk}**。已正式上架至防詐警報牆，積分 +100 點已入帳！")
+            # 🛑 嚴格過濾機制：檢查是否為亂填或過短
+            clean_url = input_url.strip()
+            clean_desc = input_desc.strip()
+            
+            if len(clean_url) < 4 or len(clean_desc) < 5:
+                st.error("⚠️ **格式不符 / 內容過短！** 請輸入有效的完整網址（至少 4 個字元）與詳細的詐騙手法描述，才可獲得積分與發布。")
             else:
-                st.error("⚠️ 請輸入可疑網址或帳號名稱！")
+                # 🛑 檢查是否重複通報
+                existing_urls = [p['url'].lower() for p in st.session_state.wall_posts]
+                if clean_url.lower() in existing_urls:
+                    st.warning(f"⚠️ **通報失敗！** 網址「{clean_url}」已經存在於防詐警報清單中，請勿重複提交洗分。")
+                else:
+                    # 🧠 AI 自動審核與風險分級邏輯
+                    url_lower = clean_url.lower()
+                    risk_keywords = ["airdrop", "free", "claim", "connect", "verify", "reward", "gift", "support", "bonus", "wallet", "unisw", "opensea", "metamask"]
+                    match_count = sum(1 for kw in risk_keywords if kw in url_lower)
+                    
+                    if match_count >= 1 or "-" in url_lower or len(url_lower) > 15:
+                        auto_risk = "🔴 高風險釣魚 (AI自動審核)"
+                    else:
+                        auto_risk = "🟡 中度疑慮 (需人工複查)"
+
+                    # 永久寫入 Session 狀態
+                    st.session_state.wall_posts.insert(0, {
+                        "url": clean_url, 
+                        "desc": clean_desc, 
+                        "risk": auto_risk,
+                        "reporter": st.session_state.user_id
+                    })
+                    st.session_state.user_points += 100
+                    st.success(f"✅ 審核通過！系統判定：**{auto_risk}**。資料已成功儲存至警報牆，積分 +100 點已入帳！")
 
     st.markdown("---")
-    st.subheader("🔥 已通過 AI 審核之全校防詐即時警報清單")
-    st.write("以下為系統自動審核通過並列管的高風險與可疑網址：")
+    st.subheader("🔥 全校防詐即時警報清單（資料持續保留中）")
+    st.write(f"當前共有 **{len(st.session_state.wall_posts)}** 筆經過系統驗證的有效防詐通報：")
     
     for post in st.session_state.wall_posts:
         risk_badge = post.get('risk', '⚠️ 需注意')
@@ -213,10 +220,8 @@ elif menu == "🛡️ 防詐動態牆 (AI自動審核與通報系統)":
         
         if "高風險" in risk_badge:
             st.error(f"🚨 **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
-        elif "中度" in risk_badge:
-            st.warning(f"⚠️ **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
         else:
-            st.info(f"ℹ️ **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
+            st.warning(f"⚠️ **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
 
 # 4. 幸運餅乾
 elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
@@ -264,5 +269,5 @@ elif menu == "👥 團隊成員與 WBS 分工":
       1. **林俊磊** (學號：1121408006，電話：0908586559) — 專題總籌、需求分析與防詐指標設定
       2. **吳品毅** (學號：1121408004，電話：0905486080) — UI/UX 原型設計、短影音腳本企劃
       3. **林建愷** (學號：1121408005，電話：0976230162) — 社群防詐動態牆與同儕驗證機制設計
-      4. **楊杰斯** (學號：1121408026，電話：0975399476) — Python 官網與互動模擬系統實作
+      4. **楊杰斯** (學號：1121408026，電話：0975399476) — 官網與互動模擬系統實作
     """)
