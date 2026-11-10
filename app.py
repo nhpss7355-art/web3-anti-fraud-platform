@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-import re
 
 # 頁面配置
 st.set_page_config(
@@ -15,7 +14,7 @@ if 'user_id' not in st.session_state:
 if 'user_points' not in st.session_state:
     st.session_state.user_points = 150
 
-# 幸運餅乾改為每日 3 次限制
+# 幸運餅乾每日 3 次限制
 if 'cookie_count' not in st.session_state:
     st.session_state.cookie_count = 0
 if 'cookie_history' not in st.session_state:
@@ -25,10 +24,12 @@ if 'cookie_history' not in st.session_state:
 if 'completed_units' not in st.session_state:
     st.session_state.completed_units = []
 
+# 動態牆資料（改為純 AI 審核與風險狀態，不再需要一直投票洗分）
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
-        {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "risk": "🔴 高風險釣魚", "votes": 42},
-        {"url": "Discord 假官方支援小幫手 (Support#8821)", "desc": "私訊聲稱錢包驗證失敗，要求提供助記詞協助解鎖。", "risk": "🔴 高風險社交工程", "votes": 38}
+        {"url": "fake-uniswap-rewards.com", "desc": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權。", "risk": "🔴 高風險釣魚 (AI自動審核)", "reporter": "Student-88219"},
+        {"url": "Discord 假官方支援小幫手 (Support#8821)", "desc": "私訊聲稱錢包驗證失敗，要求提供助記詞協助解鎖。", "risk": "🔴 高風險社交工程 (AI自動審核)", "reporter": "Student-10492"},
+        {"url": "bybit-airdrop-bonus.net", "desc": "偽造知名交易所發放註冊獎金與釣魚授權。", "risk": "🟡 中度疑慮 (需注意)", "reporter": "Student-55120"}
     ]
 
 # 頂部導覽列與即時積分狀態
@@ -66,12 +67,6 @@ with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕
     * **累積學習積分**：`{st.session_state.user_points} 點 Task Coins`
     * **當前資安素養階級**：`{level_str}`
     * **即時同儕防禦排名**：`{rank_str}`
-    
-    ---
-    ### 📚 平台素養等級對照標準：
-    * **🏆 Web3 資安防禦專家 (Lv.4)**：積分 $\\ge$ 400 點
-    * **🥈 Web3 資安進階防護生 (Lv.3)**：積分 250 ~ 399 點
-    * **🥉 Web3 資安新手 (Lv.2)**：積分 $<$ 250 點
     """)
 
 st.markdown("---")
@@ -80,7 +75,7 @@ st.markdown("---")
 menu = st.sidebar.selectbox("🧭 系統功能導覽選單", [
     "🏠 專題核心總覽 (題目與架構)",
     "🎬 沉浸式短影音學習 (防刷分測驗區)",
-    "🛡️ 防詐動態牆 (AI自動分析與同儕驗證)",
+    "🛡️ 防詐動態牆 (AI自動審核與通報系統)",
     "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)",
     "👥 團隊成員與 WBS 分工"
 ])
@@ -98,7 +93,7 @@ if menu == "🏠 專題核心總覽 (題目與架構)":
         st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
     with col_c2:
         st.markdown("### 🛡️ 核心模組二：社群媒體互助")
-        st.warning("建構去中心化防詐警報網，內建 AI 自動特徵分析引擎，並透過同儕驗證機制抵抗詐騙。")
+        st.warning("建構去中心化防詐警報網，內建 AI 自動審核機制，即時對可疑網址進行風險評級與過濾。")
 
 # 2. 短影音學習
 elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
@@ -171,59 +166,57 @@ elif menu == "🎬 沉浸式短影音學習 (防刷分測驗區)":
         * **素養吸收判定**：根據總積分自動將您的資安防禦等級與同儕排名即時更新！
         """)
 
-# 3. 防詐動態牆 (內建 AI 網址自動分析引擎)
-elif menu == "🛡️ 防詐動態牆 (AI自動分析與同儕驗證)":
-    st.header("🛡️ 社群防詐警報通報與 AI 自動特徵分析引擎")
-    st.write("集結社群智慧與程式自動化審核！當您輸入可疑網址時，系統後端會自動進行關鍵字與釣魚特徵交叉分析。")
+# 3. 防詐動態牆 (移除無限投票，改為 AI 自動審核與狀態清單)
+elif menu == "🛡️ 防詐動態牆 (AI自動審核與通報系統)":
+    st.header("🛡️ 社群防詐警報通報與 AI 自動審核中心")
+    st.write("當您輸入可疑網址時，系統後端會立即透過 AI 特徵碼引擎進行審核，審核通過後自動發布至警報牆，無需人工重複投票！")
     
     with st.form("report_form"):
-        st.subheader("🚨 發起新的社群防詐通報與自動分析")
-        input_url = st.text_input("可疑網址 / 詐騙帳號名稱：", placeholder="例如：fake-uniswap-airdrop.com")
+        st.subheader("🚨 發起新的社群防詐通報")
+        input_url = st.text_input("可疑網址 / 詐騙帳號名稱：", placeholder="例如：fake-opensea-airdrop.com")
         input_desc = st.text_area("詐騙手法描述：", placeholder="例如：聲稱抽中免費 NFT，連接錢包後立刻被轉走...")
-        submitted = st.form_submit_button("🤖 執行自動檢測並發布通報 (賺取 +100 積分)")
+        submitted = st.form_submit_button("🤖 提交審核並發布警報 (賺取 +100 積分)")
         
         if submitted:
             if input_url:
-                # 🧠 Python 內建的 AI 網址特徵分析邏輯
+                # 🧠 AI 自動審核與風險分級邏輯
                 url_lower = input_url.lower()
                 risk_keywords = ["airdrop", "free", "claim", "connect", "verify", "reward", "gift", "support", "bonus", "wallet", "unisw", "opensea"]
                 match_count = sum(1 for kw in risk_keywords if kw in url_lower)
                 
                 if match_count >= 2 or "-" in url_lower or len(url_lower) > 25:
-                    auto_risk = "🔴 高風險釣魚 (AI自動判定)"
+                    auto_risk = "🔴 高風險釣魚 (AI自動審核)"
                 elif match_count == 1:
                     auto_risk = "🟡 中度疑慮 (需注意)"
                 else:
-                    auto_risk = "🟢 正常/待驗證"
+                    auto_risk = "🟢 正常/安全"
 
                 # 插入動態牆
                 st.session_state.wall_posts.insert(0, {
                     "url": input_url, 
-                    "desc": f"{input_desc} [系統自動檢測：{auto_risk}]", 
+                    "desc": input_desc, 
                     "risk": auto_risk,
-                    "votes": 1
+                    "reporter": st.session_state.user_id
                 })
                 st.session_state.user_points += 100
-                st.success(f"✅ AI 檢測完成！系統判定結果：**{auto_risk}**。積分 +100 點已入帳！")
+                st.success(f"✅ AI 審核通過！系統判定結果：**{auto_risk}**。已正式上架至防詐警報牆，積分 +100 點已入帳！")
             else:
                 st.error("⚠️ 請輸入可疑網址或帳號名稱！")
 
     st.markdown("---")
-    st.subheader("🔥 當前社群熱門防詐通報清單（含 AI 審核標籤）")
-    for idx, post in enumerate(st.session_state.wall_posts):
-        col_p1, col_p2 = st.columns([3, 1])
-        with col_p1:
-            risk_badge = post.get('risk', '⚠️ 需注意')
-            if "高風險" in risk_badge:
-                st.error(f"🚨 **{post['url']}** [{risk_badge}]\n\n描述：{post['desc']}")
-            else:
-                st.warning(f"⚠️ **{post['url']}** [{risk_badge}]\n\n描述：{post['desc']}")
-        with col_p2:
-            if st.button(f"👍 確實是詐騙 ({post['votes']})", key=f"vote_{idx}"):
-                st.session_state.wall_posts[idx]['votes'] += 1
-                st.session_state.user_points += 10
-                st.success("👍 驗證投票成功！積分 +10 點！")
-                st.rerun()
+    st.subheader("🔥 已通過 AI 審核之全校防詐即時警報清單")
+    st.write("以下為系統自動審核通過並列管的高風險與可疑網址：")
+    
+    for post in st.session_state.wall_posts:
+        risk_badge = post.get('risk', '⚠️ 需注意')
+        reporter_id = post.get('reporter', '匿名學生')
+        
+        if "高風險" in risk_badge:
+            st.error(f"🚨 **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
+        elif "中度" in risk_badge:
+            st.warning(f"⚠️ **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
+        else:
+            st.info(f"ℹ️ **{post['url']}**  |  `狀態: {risk_badge}`  |  `通報人: {reporter_id}`\n\n**詐騙手法說明**：{post['desc']}")
 
 # 4. 幸運餅乾
 elif menu == "🥠 Lucky Cookie Bite (Web3 幸運餅乾 - 每日3次)":
