@@ -3,7 +3,7 @@ import random
 
 # 頁面配置
 st.set_page_config(
-    page_title="Tasksnap - 結合影音與社群之數位資產素養平台",
+    page_title="結合影音與社群之數位資產素養平台",
     page_icon="🛡️",
     layout="wide"
 )
