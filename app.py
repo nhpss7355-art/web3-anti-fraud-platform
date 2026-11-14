@@ -12,31 +12,28 @@ st.set_page_config(
 if 'user_id' not in st.session_state:
     st.session_state.user_id = f"Student-{random.randint(10000, 99999)}"
 if 'user_points' not in st.session_state:
-    st.session_state.user_points = 150
+    st.session_state.user_points = 210
 
-# 幸運餅乾每日 3 次限制
 if 'cookie_count' not in st.session_state:
     st.session_state.cookie_count = 0
 if 'cookie_history' not in st.session_state:
     st.session_state.cookie_history = []
 
-# 紀錄每個單元是否已經通關過
 if 'completed_units' not in st.session_state:
-    st.session_state.completed_units = []
+    st.session_state.completed_units = ["unit_1"]
 
-# 動態牆資料（支援網址、留言與截圖展示）
 if 'wall_posts' not in st.session_state:
     st.session_state.wall_posts = [
         {
             "url": "https://www.lbank.com/bonus/center?icode=66I9H", 
-            "comment": "這是 LBank 官方合法行銷活動連結，經系統審核為安全。", 
+            "comment": "這是 LBank 官方合法行銷活動連結，經系統審核為安全白名單。", 
             "risk": "🟢 合法官方活動/推廣網址", 
             "reporter": "Student-32808",
             "image": None
         },
         {
-            "url": "fake-uniswap-rewards.com", 
-            "comment": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權，大家小心！", 
+            "url": "https://fake-uniswap-rewards.com", 
+            "comment": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權，點擊後錢包資產全數被清空！", 
             "risk": "🔴 高風險釣魚 (AI自動審核)", 
             "reporter": "Student-88219",
             "image": None
@@ -58,25 +55,25 @@ elif pts >= 250:
     rank_str = "全國排名 Top 18% (校內排名前 12名)"
 else:
     level_str = "🥉 資安新手 (Lv.2)"
-    rank_str = "全國排名 Top 45% (急需提升防禦力)"
+    rank_str = "全國排名 Top 45% (建議加強微學習)"
 
 # 積分與動態身分看板
 st.markdown("---")
 col_s1, col_s2, col_s3 = st.columns(3)
 with col_s1:
-    st.info(f"👤 **當前登入訪客編號**\n\n{st.session_state.user_id} (動態生成)")
+    st.info(f"👤 **當前登入訪客編號**\n\n`{st.session_state.user_id}` (動態生成)")
 with col_s2:
-    st.warning(f"⭐ **平台學習積分 (Coins)**\n\n{st.session_state.user_points} 點")
+    st.warning(f"⭐ **平台學習積分 (Coins)**\n\n`{st.session_state.user_points} 點`")
 with col_s3:
     st.success(f"📌 **資安素養防禦等級**\n\n{level_str}")
 
-# 可點開查看詳細排名與等級對照的小頁面
-with st.expander("📊 【點我展開】查看詳細資安防禦等級與同儕排名對照表"):
+with st.expander("📊 【點我展開】查看詳細資安防禦等級、同儕排名與積分特權對照表"):
     st.markdown(f"""
     * **訪客專屬代號**：`{st.session_state.user_id}`
     * **累積學習積分**：`{st.session_state.user_points} 點 Coins`
     * **當前資安素養階級**：`{level_str}`
     * **即時同儕防禦排名**：`{rank_str}`
+    * **積分特權說明**：積分可用於解鎖高級防詐白名單查詢權限與專屬測驗勳章！
     """)
 
 st.markdown("---")
@@ -84,27 +81,52 @@ st.markdown("---")
 # 🧭 側邊欄導覽選單
 st.sidebar.title("🧭 系統功能導覽選單")
 menu = st.sidebar.radio("選擇功能分頁：", [
-    "🏠 專題核心總覽",
+    "🏠 專題核心與數位資產素養總覽",
     "🎬 短影音微學習專區",
     "🔍 防詐網址審核與留言牆",
     "🥠 幸運餅乾盲盒",
     "👥 團隊成員與 WBS 分工"
 ])
 
-# 1. 核心總覽
-if menu == "🏠 專題核心總覽":
-    st.header("🏠 結合影音與社群之新興數位資產素養推廣平台")
+# 1. 核心總覽與豐富的數位資產素養專論
+if menu == "🏠 專題核心與數位資產素養總覽":
+    st.header("🏠 新興數位資產素養平台設計與教育核心總覽")
     st.write("""
-    本專題針對大專院校學生與青年世代，打造兼具**「短影音微學習」**與**「社群同儕防詐互助」**的數位資產教育生態系。
+    本專題針對大專院校學生與青年世代，打造兼具**「數位資產素養教育」**、**「短影音微學習」**與**「社群同儕防詐互助」**的 Web3 資安教育生態系。
     """)
     
+    st.markdown("---")
+    st.subheader("📖 深度專論：什麼是「數位資產素養 (Digital Asset Literacy)」？")
+    st.write("""
+    在 Web3、區塊鏈與去中心化金融（DeFi）迅速發展的時代，個人享有完全自主管理資產的權利（Self-Sovereignty）。
+    然而，這種權利伴隨著絕對的個人資安責任。在傳統集中式金融（CeFi）中，如銀行帳戶遭盜領可透過客服凍結；
+    但在區塊鏈上，交易一旦透過私鑰簽章送出即**絕對不可逆（Irreversibility）**。
+    因此，本專題將「數位資產素養」深化拆解為以下三大核心防禦構面：
+    ""\"
+    )
+    
+    # 三大構面詳細卡片
+    col_d1, col_d2, col_d3 = st.columns(3)
+    with col_d1:
+        st.info("🧠 **1. 技術認知構面 (Technical)**\n\n* **核心內涵**：理解區塊鏈底層心智模型、公私鑰加密原理。<br>* **防禦重點**：明確區分冷熱錢包管理差異，牢記「助記詞/私鑰絕對不上雲端」之鐵律。")
+    with col_d2:
+        st.warning("🛡️ **2. 風險防護構面 (Protection)**\n\n* **核心內涵**：落實零信任（Zero Trust）原則。<br>* **防禦重點**：識別釣魚網站（Punycode 網域偽造）、假空投誘餌與 Permit2 無限授權合約陷阱。")
+    with col_d3:
+        st.success("🤝 **3. 資訊審核構面 (Verification)**\n\n* **核心內涵**：運用群眾智慧與同儕審查（Peer Verification）。<br>* **防禦重點**：透過白名單與鏈上數據交叉核查，聯手建構去中心化防詐警報網。")
+
+    st.markdown("---")
+    st.subheader("🌟 平台四大核心互動模組架構")
     col_c1, col_c2 = st.columns(2)
     with col_c1:
-        st.markdown("### 🎬 核心模組一：影音內容驅動")
-        st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配互動測驗評估學習吸收成效。")
+        st.markdown("### 🎬 模組一：直立式短影音微學習")
+        st.info("將複雜的區塊鏈資安拆解為 30-60 秒沉浸式短影音，搭配防刷分隨堂測驗機制，大幅降低知識吸收門檻，解決傳統政宣過於枯燥的痛點。")
+        st.markdown("### 🔍 模組二：社群防詐網址智慧審核牆")
+        st.warning("內建 AI 智慧白名單與知名交易所官方白名單過濾機制，支援使用者提交可疑網址、心得留言及詐騙現場截圖上傳。")
     with col_c2:
-        st.markdown("### 🔍 核心模組二：社群媒體互助")
-        st.warning("建構防詐警報網，支援即時網址審核、心得留言與詐騙現場截圖上傳。")
+        st.markdown("### 🥠 模組三：Web3 幸運餅乾盲盒")
+        st.info("結合趣味盲盒機制，每位訪客每日享有 3 次抽獎機會，獲得防禦籤文與積分獎勵，大幅提升平台趣味性與黏著度。")
+        st.markdown("### 👥 模組四：動態訪客身分與積分排位")
+        st.warning("系統自動隨機生成專屬訪客代號，並根據累積積分動態計算資安防禦素養等級與同儕排位。")
 
 # 2. 短影音學習
 elif menu == "🎬 短影音微學習專區":
@@ -171,8 +193,8 @@ elif menu == "🎬 短影音微學習專區":
                     st.error("❌ **回答錯誤！** 請重新思考後作答。")
 
     with col_v2:
-        st.markdown("### 📊 學習吸收成效")
-        st.write("透過防刷分測驗與積分累積，即時評估您的 Web3 資安防禦等級。")
+        st.markdown("### 📊 學習吸收成效與防刷分機制")
+        st.info("• **微學習成效**：透過 5 大關鍵主題實戰測驗，檢驗學員對技術認知與風險防護的掌握度。\n• **防刷分機制**：系統自動記錄各單元通關狀態，重複測驗不重複發放積分，確保學習紀錄真實有效。")
 
 # 3. 防詐動態牆
 elif menu == "🔍 防詐網址審核與留言牆":
@@ -276,7 +298,7 @@ elif menu == "🥠 幸運餅乾盲盒":
     
     with col_g2:
         st.markdown("### 🏆 幸運餅乾機制設計說明")
-        st.info("• **次數限制**：每位訪客每日限制 **3 次** 抽獎機會。\n• **多元籤文序列**：內含 5 種不同資安防禦等級的盲盒籤文。")
+        st.info("• **次數限制**：每位訪客每日限制 **3 次** 抽獎機會。\n• **多元籤文序列**：內含 5 種不同資安防禦等級的盲盒籤文與積分獎勵。")
 
 # 5. 團隊分工
 elif menu == "👥 團隊成員與 WBS 分工":
