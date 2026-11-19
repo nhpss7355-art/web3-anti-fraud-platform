@@ -1,5 +1,8 @@
 import streamlit as st
 import random
+import sqlite3
+import os
+from datetime import datetime
 
 # 頁面配置
 st.set_page_config(
@@ -7,6 +10,81 @@ st.set_page_config(
     page_icon="📌",
     layout="wide"
 )
+
+DB_PATH = "anti_scam.db"
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS wall_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT NOT NULL,
+            comment TEXT NOT NULL,
+            risk TEXT NOT NULL,
+            reporter TEXT NOT NULL,
+            image_path TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+
+    # 若資料表完全沒有資料，寫入預設範例資料
+    c.execute("SELECT COUNT(*) FROM wall_posts")
+    count = c.fetchone()[0]
+    if count == 0:
+        default_posts = [
+            (
+                "https://www.lbank.com/bonus/center?icode=66I9H",
+                "這是 LBank 官方合法行銷活動連結，經系統審核為安全白名單。",
+                "🟢 合法官方活動/推廣網址",
+                "Student-32808",
+                None,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            ),
+            (
+                "https://fake-uniswap-rewards.com",
+                "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權，點擊後錢包資產全數被清空！",
+                "🔴 高風險釣魚 (AI自動審核)",
+                "Student-88219",
+                None,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+        ]
+        c.executemany("""
+            INSERT INTO wall_posts (url, comment, risk, reporter, image_path, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, default_posts)
+        conn.commit()
+    conn.close()
+
+
+def add_wall_post(url: str, comment: str, risk: str, reporter: str, image_path: str | None):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO wall_posts (url, comment, risk, reporter, image_path, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (url, comment, risk, reporter, image_path, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    conn.commit()
+    conn.close()
+
+
+def get_wall_posts():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM wall_posts ORDER BY id DESC")
+    rows = [dict(r) for r in c.fetchall()]
+    conn.close()
+    return rows
+
+
+# 初始化資料庫
+init_db()
 
 # 初始化 Session State
 if 'user_id' not in st.session_state:
@@ -22,24 +100,6 @@ if 'cookie_history' not in st.session_state:
 if 'completed_units' not in st.session_state:
     st.session_state.completed_units = ["unit_1"]
 
-if 'wall_posts' not in st.session_state:
-    st.session_state.wall_posts = [
-        {
-            "url": "https://www.lbank.com/bonus/center?icode=66I9H", 
-            "comment": "這是 LBank 官方合法行銷活動連結，經系統審核為安全白名單。", 
-            "risk": "🟢 合法官方活動/推廣網址", 
-            "reporter": "Student-32808",
-            "image": None
-        },
-        {
-            "url": "https://fake-uniswap-rewards.com", 
-            "comment": "假冒 Uniswap 官方發放空投獎勵，要求 Permit 授權，點擊後錢包資產全數被清空！", 
-            "risk": "🔴 高風險釣魚 (AI自動審核)", 
-            "reporter": "Student-88219",
-            "image": None
-        }
-    ]
-
 # 頂部導覽列與即時積分狀態
 st.title("📌 數位資產素養與社群防詐推廣平台")
 st.markdown("### 結合影音內容與社群媒體之新興數位資產素養平台設計與經營")
@@ -51,7 +111,7 @@ if pts >= 400:
     level_str = "🏆 資安防禦專家 (Lv.4)"
     rank_str = "全國排名 Top 5% (校內排名前 3名)"
 elif pts >= 250:
-    level_str = "🥈 資進階防護生 (Lv.3)"
+    level_str = "🥈 資安進階防護生 (Lv.3)"
     rank_str = "全國排名 Top 18% (校內排名前 12名)"
 else:
     level_str = "🥉 資安新手 (Lv.2)"
@@ -88,7 +148,7 @@ menu = st.sidebar.radio("選擇功能分頁：", [
     "👥 團隊成員與 WBS 分工"
 ])
 
-# 1. 核心總覽與豐富的數位資產素養專論 (已強化青年使用現況)
+# 1. 核心總覽與豐富的數位資產素養專論
 if menu == "🏠 專題核心與數位資產素養總覽":
     st.header("🏠 新興數位資產素養平台設計與教育核心總覽")
     st.write("""
@@ -105,7 +165,6 @@ if menu == "🏠 專題核心與數位資產素養總覽":
     因此，本專題將「數位資產素養」深化拆解為以下三大核心防禦構面：
     """)
     
-    # 三大構面詳細卡片 (已修正排版格式)
     col_d1, col_d2, col_d3 = st.columns(3)
     with col_d1:
         st.info("🧠 **1. 技術認知構面 (Technical)**\n\n* **核心內涵**：理解區塊鏈底層心智模型、公私鑰加密原理。\n* **防禦重點**：明確區分冷熱錢包管理差異，牢記「助記詞/私鑰絕對不上雲端」之鐵律。")
@@ -121,7 +180,7 @@ if menu == "🏠 專題核心與數位資產素養總覽":
         st.markdown("### 🎬 模組一：直立式短影音微學習")
         st.info("參考刑事警察局與網紅合製之《30秒虛擬貨幣詐騙out！》概念，將複雜區塊鏈資安拆解為短影音，搭配防刷分隨堂測驗機制，解決傳統政宣過於枯燥的痛點。")
         st.markdown("### 🔍 模組二：社群防詐網址智慧審核牆")
-        st.warning("內建 AI 智慧白名單與知名交易所官方白名單過濾機制，支援使用者提交可疑網址、心得留言及詐騙現場截圖上傳。")
+        st.warning("內建 AI 智慧白名單與知名交易所官方白名單過濾機制，支援使用者提交可疑網址、心得留言及詐騙現場截圖上傳，並透過資料庫保存通報紀錄。")
     with col_c2:
         st.markdown("### 🥠 模組三：Web3 幸運餅乾盲盒")
         st.info("結合趣味盲盒機制，每位訪客每日享有 3 次抽獎機會，獲得防禦籤文與積分獎勵，大幅提升平台趣味性與黏著度。")
@@ -204,10 +263,10 @@ elif menu == "🎬 短影音微學習專區":
                 "• **微學習精神**：呼應刑事警察局《30秒虛擬貨幣詐騙out！》短片概念，將複雜資安拆解為短平快宣導。\n"
                 "• **防刷分機制**：系統自動透過 Session State 記錄各單元通關狀態，已通關單元無法重複獲取積分，確保學習歷程真實有效。")
 
-# 3. 防詐動態牆
+# 3. 防詐動態牆（已改為 SQLite 儲存）
 elif menu == "🔍 防詐網址審核與留言牆":
     st.header("🔍 社群防詐網址審核與實況截圖留言牆")
-    st.write("直接輸入可疑網址進行系統自動審核，並可留下心得留言與上傳詐騙現場截圖佐證！")
+    st.write("直接輸入可疑網址進行系統自動審核，並可留下心得留言與上傳詐騙現場截圖佐證！通報紀錄會存入資料庫保存。")
     
     with st.form("report_form", clear_on_submit=True):
         st.subheader("🚨 提交新網址審核與留言通報")
@@ -233,33 +292,45 @@ elif menu == "🔍 防詐網址審核與留言牆":
                 else:
                     risk_keywords = ["airdrop-claim", "free-crypto", "connect-wallet", "verify-account", "wallet-fix", "reward-bonus"]
                     match_count = sum(1 for kw in risk_keywords if kw in url_lower)
-                    if match_count >= 1 or "-" in url_lower and "lbank" not in url_lower:
+                    if match_count >= 1 or ("-" in url_lower and "lbank" not in url_lower):
                         auto_risk = "🔴 高風險釣魚 (AI自動審核)"
                     else:
                         auto_risk = "🟡 中度疑慮 (需注意)"
 
-                st.session_state.wall_posts.insert(0, {
-                    "url": clean_url, 
-                    "comment": clean_comment if clean_comment else "無額外留言說明。", 
-                    "risk": auto_risk,
-                    "reporter": st.session_state.user_id,
-                    "image": uploaded_file
-                })
+                saved_image_path = None
+                if uploaded_file is not None:
+                    ext = os.path.splitext(uploaded_file.name)[1].lower()
+                    if ext not in [".png", ".jpg", ".jpeg"]:
+                        ext = ".png"
+                    filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{random.randint(1000, 9999)}{ext}"
+                    saved_image_path = os.path.join(UPLOAD_DIR, filename)
+                    with open(saved_image_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+
+                add_wall_post(
+                    url=clean_url,
+                    comment=clean_comment if clean_comment else "無額外留言說明。",
+                    risk=auto_risk,
+                    reporter=st.session_state.user_id,
+                    image_path=saved_image_path
+                )
                 st.session_state.user_points += 100
-                st.success(f"✅ 審核完成！系統判定：**{auto_risk}**。貼文已成功發布，積分 +100 點已入帳！")
+                st.success(f"✅ 審核完成！系統判定：**{auto_risk}**。貼文已存入資料庫，積分 +100 點已入帳！")
                 st.rerun()
 
     st.markdown("---")
     st.subheader("🔥 全校防詐動態與審核通報牆（完整公開列表）")
-    st.write(f"當前共有 **{len(st.session_state.wall_posts)}** 筆通報與審核紀錄：")
+    wall_posts = get_wall_posts()
+    st.write(f"當前共有 **{len(wall_posts)}** 筆通報與審核紀錄：")
     
-    for idx, post in enumerate(st.session_state.wall_posts, 1):
+    for idx, post in enumerate(wall_posts, 1):
         risk_badge = post.get('risk', '⚠️ 需注意')
         reporter_id = post.get('reporter', '匿名學生')
         comment_text = post.get('comment', '')
-        img_file = post.get('image', None)
+        img_path = post.get('image_path', None)
+        created_at = post.get('created_at', '')
         
-        st.markdown(f"### 📌 通報紀錄 #{idx} ({reporter_id})")
+        st.markdown(f"### 📌 通報紀錄 #{idx} ({reporter_id}) — {created_at}")
         if "高風險" in risk_badge:
             st.error(f"**審核結果狀態：** {risk_badge}\n\n**檢測網址：** `{post['url']}`")
         elif "合法" in risk_badge:
@@ -268,8 +339,8 @@ elif menu == "🔍 防詐網址審核與留言牆":
             st.warning(f"**審核結果狀態：** {risk_badge}\n\n**檢測網址：** `{post['url']}`")
             
         st.markdown(f"💬 **使用者留言說明**：\n> {comment_text}")
-        if img_file is not None:
-            st.image(img_file, caption=f"通報人 {reporter_id} 上傳的現場截圖佐證", use_column_width=True)
+        if img_path and os.path.exists(img_path):
+            st.image(img_path, caption=f"通報人 {reporter_id} 上傳的現場截圖佐證", use_container_width=True)
         st.markdown("---")
 
 # 4. 幸運餅乾
